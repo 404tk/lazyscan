@@ -61,10 +61,13 @@ func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {
 	}
 	if strings.Contains(reply, "+OK") {
 		flag = true
+		result := fmt.Sprintf("[%s] Redis password: %s", realhost, pass)
+		log.Println(result)
+		if info.Queue != nil {
+			info.Queue.Push(result)
+		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {
-			result := fmt.Sprintf("[%s] Redis password: %s", realhost, pass)
-			log.Println(result)
 			return flag, err
 		}
 		_, err = conn.Write([]byte("info\r\n"))
@@ -109,10 +112,13 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 	}
 	if strings.Contains(reply, "redis_version") {
 		flag = true
+		result := fmt.Sprintf("[%s] Redis unauthorized", realhost)
+		log.Println(result)
+		if info.Queue != nil {
+			info.Queue.Push(result)
+		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {
-			result := fmt.Sprintf("[+] Redis:%s unauthorized", realhost)
-			log.Println(result)
 			return flag, err
 		}
 		if strings.Contains(reply, "\nredis_version:5") || strings.Contains(reply, "\nredis_version:4") {
@@ -125,7 +131,7 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 }
 
 func RedisExec(conn net.Conn, addr, cmd string) {
-	if addr == "" {
+	if addr == "" || cmd == "" {
 		return
 	}
 	log.Println("开始利用redis主从复制")

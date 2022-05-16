@@ -47,11 +47,15 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			log.Println(fmt.Sprintf("mysql:%v:%v:%v %v", Host, Port, Username, Password))
+			result := fmt.Sprintf("[%s:%s] MySQL credential %s/%s", Host, Port, Username, Password)
+			log.Println(result)
+			if info.Queue != nil {
+				info.Queue.Push(result)
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 
-			type result struct {
+			type sqlresult struct {
 				VariableName string
 				Value        string
 			}
@@ -59,7 +63,7 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 			rows, err := db.QueryContext(ctx, "show global variables like 'version_compile_os'")
 			if err == nil {
 				for rows.Next() {
-					var res result
+					var res sqlresult
 					rows.Scan(&res.VariableName, &res.Value)
 					// 暂时只支持Windows 64位的dll
 					if res.Value == "Win64" {

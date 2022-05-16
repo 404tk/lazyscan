@@ -31,5 +31,5 @@ func parseOptions() *runner.Options {
 func main() {
 	options := parseOptions()
 	runner := runner.New(options)
-	runner.Enumerate()
+	runner.Enumerate(nil)
 }

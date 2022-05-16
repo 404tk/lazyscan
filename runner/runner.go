@@ -6,8 +6,10 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/404tk/lazyscan/common"
+	"github.com/404tk/lazyscan/common/queue"
 	"github.com/404tk/lazyscan/common/utils"
 	"github.com/404tk/lazyscan/pkg"
 	"github.com/404tk/lazyscan/pkg/schema"
@@ -33,6 +35,12 @@ type Options struct {
 	PortList         map[string]string
 }
 
+type Output struct {
+	AliveHosts []string
+	AlivePorts []string
+	Vulns      []string
+}
+
 func New(opt *Options) *Options {
 	ParseScantype(opt)
 	ParseInput(opt)
@@ -40,7 +48,7 @@ func New(opt *Options) *Options {
 	return opt
 }
 
-func (opt *Options) Enumerate() {
+func (opt *Options) Enumerate(resultQueue *queue.Queue) Output {
 	log.Println("Start infoscan...")
 	Hosts, err := utils.ParseIP(opt.Host, opt.HostFile)
 	if err != nil {
@@ -52,16 +60,18 @@ func (opt *Options) Enumerate() {
 		Hosts = schema.CheckLive(Hosts, opt.LiveTop)
 		log.Printf("icmp alive hosts num is: %d\n", len(Hosts))
 	}
+	var AlivePorts []string
 	if len(Hosts) > 0 {
-		AlivePorts := schema.PortScan(Hosts, opt.Ports, opt.Timeout, opt.Threads)
+		AlivePorts = schema.PortScan(Hosts, opt.Ports, opt.Timeout, opt.Threads)
 		log.Printf("open ports num is: %d\n", len(AlivePorts))
 		if len(AlivePorts) > 0 {
-			log.Println("start vulscan...")
 			cmds := common.Command{
 				UnixCommand: utils.GenerateCMD("unix", opt.HTTPDownloadAddr, opt.FileName, opt.ExecCommand),
 				TCPCommand:  utils.GenerateCMD("tcp", opt.TCPDownloadAddr, opt.FileName, opt.ExecCommand),
 				WinCommand:  utils.GenerateCMD("win", opt.HTTPDownloadAddr, opt.FileName, opt.ExecCommand),
 			}
+			var redisListen bool
+			log.Println("start vulscan...")
 			for _, targetIP := range AlivePorts {
 				var info = common.HostInfo{
 					Host:             strings.Split(targetIP, ":")[0],
@@ -70,14 +80,25 @@ func (opt *Options) Enumerate() {
 					Timeout:          opt.Timeout,
 					Command:          cmds,
 					RedisRogueServer: opt.RedisRogueServer,
+					Queue:            resultQueue,
 				}
 				if opt.Scantype == "all" {
 					m := opt.getService(info.Port)
 					if m != "" {
+						if m == "redis" && !redisListen {
+							redisListen = true
+							go opt.RunRedisRogueServer()
+							time.Sleep(1 * time.Second)
+						}
 						info.Usernames = opt.Userdict[m]
 						addScan(m, info, ch, &wg) //plugins scan
 					}
 				} else {
+					if opt.Scantype == "redis" && !redisListen {
+						redisListen = true
+						go opt.RunRedisRogueServer()
+						time.Sleep(1 * time.Second)
+					}
 					info.Usernames = opt.Userdict[opt.Scantype]
 					addScan(opt.Scantype, info, ch, &wg)
 				}
@@ -86,14 +107,18 @@ func (opt *Options) Enumerate() {
 	}
 	wg.Wait()
 	log.Println("scan end.")
+	return Output{
+		AliveHosts: Hosts,
+		AlivePorts: AlivePorts,
+	}
 }
 
 func addScan(scantype string, info common.HostInfo, ch chan struct{}, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		scanFunc(pkg.PluginList, scantype, &info)
-		wg.Done()
 		<-ch
+		wg.Done()
 	}()
 	ch <- struct{}{}
 }

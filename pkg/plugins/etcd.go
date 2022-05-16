@@ -15,7 +15,10 @@ import (
 
 func EtcdScan(info *common.HostInfo) {
 	endpoint := fmt.Sprintf("%s:%s", info.Host, info.Port)
-	flag := getVersion(endpoint, info.Timeout)
+	flag, result := getVersion(endpoint, info.Timeout)
+	if result != "" && info.Queue != nil {
+		info.Queue.Push(result)
+	}
 	if !flag {
 		return
 	}
@@ -60,23 +63,24 @@ func EtcdScan(info *common.HostInfo) {
 }
 
 // v2
-func getVersion(endpoint string, timeout int64) bool {
+func getVersion(endpoint string, timeout int64) (bool, string) {
+	var result string
 	cli, err := clientv2.New(clientv2.Config{
 		Endpoints:               []string{"http://" + endpoint},
 		Transport:               clientv2.DefaultTransport,
 		HeaderTimeoutPerRequest: time.Duration(timeout) * time.Second,
 	})
 	if err != nil {
-		return false
+		return false, result
 	}
 	v, err := cli.GetVersion(context.Background())
 	if err == nil && v.Server != "" {
-		result := fmt.Sprintf("[%s] may be etcd unauth: {server: %s, cluster: %s}", endpoint, v.Server, v.Cluster)
+		result = fmt.Sprintf("[%s] may be etcd unauth: {server: %s, cluster: %s}", endpoint, v.Server, v.Cluster)
 		log.Println(result)
 		if strings.HasPrefix(v.Server, "3.") {
 			// K8S场景默认使用etcd v3版本
-			return true
+			return true, result
 		}
 	}
-	return false
+	return false, result
 }

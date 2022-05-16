@@ -8,7 +8,7 @@ import (
 	"github.com/tidwall/redcon"
 )
 
-func RunRedisRogueServer(opt *Options) {
+func (opt *Options) RunRedisRogueServer() {
 	if opt.RedisRogueServer == "" {
 		return
 	}

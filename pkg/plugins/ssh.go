@@ -54,8 +54,11 @@ func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
 		if err == nil {
 			defer session.Close()
 			flag = true
-			result := fmt.Sprintf("[+] SSH:%v:%v:%v %v", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] SSH credential %s/%s", Host, Port, Username, Password)
 			log.Println(result)
+			if info.Queue != nil {
+				info.Queue.Push(result)
+			}
 			cmd := info.Command.UnixCommand
 			session.Run(cmd)
 		}

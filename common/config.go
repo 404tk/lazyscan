@@ -1,5 +1,7 @@
 package common
 
+import "github.com/404tk/lazyscan/common/queue"
+
 type HostInfo struct {
 	Host             string
 	Port             string
@@ -10,6 +12,7 @@ type HostInfo struct {
 	Token            string
 	Command          Command
 	RedisRogueServer string
+	Queue            *queue.Queue
 }
 
 type Command struct {

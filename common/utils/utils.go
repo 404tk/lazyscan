@@ -40,7 +40,7 @@ func GenerateCMD(cmdtype, addr, filename, exec string) (cmd string) {
 	case "tcp":
 		tcpaddr := strings.Split(addr, "/")
 		if len(tcpaddr) < 2 {
-			log.Fatalln("TCP下载地址错误，参考格式：192.168.0.1:8553/beacon.exe")
+			log.Println("TCP下载地址错误，参考格式：192.168.0.1:8553/beacon.exe")
 			return ""
 		}
 		_addr := strings.Replace(tcpaddr[0], ":", "/", -1)
