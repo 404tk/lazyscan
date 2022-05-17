@@ -25,10 +25,7 @@ type Options struct {
 	Threads          int
 	LiveTop          int
 	Password         string
-	HTTPDownloadAddr string
-	TCPDownloadAddr  string
-	FileName         string
-	ExecCommand      string
+	Downloader       common.Downloader
 	RedisRogueServer string
 	Userdict         map[string][]string
 	Passwords        []string
@@ -39,7 +36,6 @@ type Options struct {
 type Output struct {
 	AliveHosts []string
 	AlivePorts []string
-	Vulns      []string
 }
 
 func New(opt *Options) *Options {
@@ -68,9 +64,9 @@ func (opt *Options) Enumerate(resultQueue *queue.Queue) Output {
 		log.Printf("open ports num is: %d\n", len(AlivePorts))
 		if len(AlivePorts) > 0 {
 			cmds := common.Command{
-				UnixCommand: utils.GenerateCMD("unix", opt.HTTPDownloadAddr, opt.FileName, opt.ExecCommand),
-				TCPCommand:  utils.GenerateCMD("tcp", opt.TCPDownloadAddr, opt.FileName, opt.ExecCommand),
-				WinCommand:  utils.GenerateCMD("win", opt.HTTPDownloadAddr, opt.FileName, opt.ExecCommand),
+				UnixCommand: utils.GenerateCMD("unix", opt.Downloader),
+				TCPCommand:  utils.GenerateCMD("tcp", opt.Downloader),
+				WinCommand:  utils.GenerateCMD("win", opt.Downloader),
 			}
 			var redisListen bool
 			log.Println("start vulscan...")
@@ -84,7 +80,7 @@ func (opt *Options) Enumerate(resultQueue *queue.Queue) Output {
 					RedisRogueServer: opt.RedisRogueServer,
 					Queue:            resultQueue,
 				}
-				if opt.Scantype == "all" {
+				if opt.Scantype == "" {
 					m := opt.getService(info.Port)
 					if m != "" {
 						if m == "redis" && !redisListen {

