@@ -1,39 +1,5 @@
 package common
 
-import (
-	"github.com/404tk/lazyscan/common/queue"
-)
-
-type HostInfo struct {
-	Host             string
-	Port             string
-	IfTlS            bool
-	Timeout          int64
-	Usernames        []string
-	Passwords        []string
-	Token            string
-	Command          Command
-	RedisRogueServer string
-	Queue            *queue.Queue
-}
-
-type Command struct {
-	UnixCommand string
-	TCPCommand  string
-	WinCommand  string
-}
-
-type Downloader struct {
-	WinHTTP  Loader
-	UnixHTTP Loader
-	UnixTCP  Loader
-}
-type Loader struct {
-	Addr        string
-	FileName    string
-	ExecCommand string
-}
-
 var DefaultDownloader = Downloader{
 	WinHTTP: Loader{
 		Addr:        "http://192.168.1.2:8080/beacon.bat",

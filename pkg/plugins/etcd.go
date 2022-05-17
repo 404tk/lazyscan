@@ -18,7 +18,12 @@ func EtcdScan(info *common.HostInfo) error {
 	endpoint := fmt.Sprintf("%s:%s", info.Host, info.Port)
 	flag, result := getVersion(endpoint, info.Timeout)
 	if result != "" && info.Queue != nil {
-		info.Queue.Push(result)
+		vuln := common.Vuln{
+			Host:   info.Host,
+			Port:   info.Port,
+			Unauth: true,
+		}
+		info.Queue.Push(vuln)
 	}
 	if !flag {
 		return errors.New("not etcd v3.")

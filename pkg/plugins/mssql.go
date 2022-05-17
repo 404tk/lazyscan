@@ -34,8 +34,8 @@ func MssqlScan(info *common.HostInfo) error {
 }
 
 func MssqlConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {
-	Host, Port, Username, Password := info.Host, info.Port, user, pass
-	dataSourceName := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%v;encrypt=disable;timeout=%v", Host, Username, Password, Port, time.Duration(info.Timeout)*time.Second)
+	dataSourceName := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%v;encrypt=disable;timeout=%v",
+		info.Host, user, pass, info.Port, time.Duration(info.Timeout)*time.Second)
 	db, err := sql.Open("mssql", dataSourceName)
 	if err == nil {
 		db.SetConnMaxLifetime(time.Duration(info.Timeout) * time.Second)
@@ -44,10 +44,16 @@ func MssqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
-			result := fmt.Sprintf("[%s:%s] MSSQL credential %s/%s", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] MSSQL credential %s/%s", info.Host, info.Port, user, pass)
 			log.Println(result)
 			if info.Queue != nil {
-				info.Queue.Push(result)
+				vuln := common.Vuln{
+					Host: info.Host,
+					Port: info.Port,
+					User: user,
+					Pass: pass,
+				}
+				info.Queue.Push(vuln)
 			}
 			cmd := info.Command.WinCommand
 			MssqlExec(db, cmd)

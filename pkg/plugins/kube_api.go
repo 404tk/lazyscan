@@ -43,7 +43,16 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 	result := fmt.Sprintf("[%s:%s] There are %d pods in the cluster.", info.Host, info.Port, len(pods.Items))
 	log.Println(result)
 	if info.Queue != nil {
-		info.Queue.Push(result)
+		vuln := common.Vuln{
+			Host: info.Host,
+			Port: info.Port,
+		}
+		if info.Token == "" {
+			vuln.Unauth = true
+		} else {
+			vuln.Token = info.Token
+		}
+		info.Queue.Push(vuln)
 	}
 
 	// batch command execution

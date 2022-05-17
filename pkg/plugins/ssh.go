@@ -32,12 +32,10 @@ func SshScan(info *common.HostInfo) error {
 }
 
 func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
-	flag = false
-	Host, Port, Username, Password := info.Host, info.Port, user, pass
-	Auth := []ssh.AuthMethod{ssh.Password(Password)}
+	Auth := []ssh.AuthMethod{ssh.Password(pass)}
 
 	config := &ssh.ClientConfig{
-		User:    Username,
+		User:    user,
 		Auth:    Auth,
 		Timeout: time.Duration(info.Timeout) * time.Second,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
@@ -47,18 +45,23 @@ func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(info.Timeout))
 	defer cancel()
-	// client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", Host, Port), config)
-	client, err := dial(ctx, "tcp", fmt.Sprintf("%v:%v", Host, Port), config)
+	client, err := dial(ctx, "tcp", fmt.Sprintf("%v:%v", info.Host, info.Port), config)
 	if err == nil {
 		defer client.Close()
 		session, err := client.NewSession()
 		defer session.Close()
 		if err == nil {
 			flag = true
-			result := fmt.Sprintf("[%s:%s] SSH credential %s/%s", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] SSH credential %s/%s", info.Host, info.Port, user, pass)
 			log.Println(result)
 			if info.Queue != nil {
-				info.Queue.Push(result)
+				vuln := common.Vuln{
+					Host: info.Host,
+					Port: info.Port,
+					User: user,
+					Pass: pass,
+				}
+				info.Queue.Push(vuln)
 			}
 			cmd := info.Command.UnixCommand
 			err = session.Run(cmd)

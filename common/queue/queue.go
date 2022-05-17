@@ -2,7 +2,6 @@ package queue
 
 import (
 	"container/list"
-	"fmt"
 	"sync"
 )
 
@@ -46,9 +45,9 @@ func (q *Queue) Length() int {
 	return length
 }
 
-func (q *Queue) Dump() (result []string) {
+func (q *Queue) Dump() (v []interface{}) {
 	for iter := q.data.Back(); iter != nil; iter = iter.Prev() {
-		result = append(result, fmt.Sprintf("%v", iter.Value))
+		v = append(v, iter.Value)
 	}
 	return
 }

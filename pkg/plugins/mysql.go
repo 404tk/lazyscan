@@ -35,9 +35,7 @@ func MysqlScan(info *common.HostInfo) error {
 }
 
 func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {
-	flag = false
-	Host, Port, Username, Password := info.Host, info.Port, user, pass
-	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/information_schema?charset=utf8&timeout=%v", Username, Password, Host, Port, time.Duration(info.Timeout)*time.Second)
+	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/information_schema?charset=utf8&timeout=%v", user, pass, info.Host, info.Port, time.Duration(info.Timeout)*time.Second)
 	db, err := sql.Open("mysql", dataSourceName)
 	if err == nil {
 		db.SetConnMaxLifetime(time.Duration(info.Timeout) * time.Second)
@@ -47,10 +45,16 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			result := fmt.Sprintf("[%s:%s] MySQL credential %s/%s", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] MySQL credential %s/%s", info.Host, info.Port, user, pass)
 			log.Println(result)
 			if info.Queue != nil {
-				info.Queue.Push(result)
+				vuln := common.Vuln{
+					Host: info.Host,
+					Port: info.Port,
+					User: user,
+					Pass: pass,
+				}
+				info.Queue.Push(vuln)
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()

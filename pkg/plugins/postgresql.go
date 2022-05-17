@@ -34,18 +34,23 @@ func PostgreScan(info *common.HostInfo) error {
 }
 
 func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {
-	Host, Port, Username, Password := info.Host, info.Port, user, pass
-	dataSourceName := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", Username, Password, Host, Port, "postgres", "disable")
+	dataSourceName := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", user, pass, info.Host, info.Port, "postgres", "disable")
 	db, err := sql.Open("postgres", dataSourceName)
 	if err == nil {
 		db.SetConnMaxLifetime(time.Duration(info.Timeout) * time.Second)
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
-			result := fmt.Sprintf("[%s:%s] Postgres credential %s/%s", Host, Port, Username, Password)
+			result := fmt.Sprintf("[%s:%s] Postgres credential %s/%s", info.Host, info.Port, user, pass)
 			log.Println(result)
 			if info.Queue != nil {
-				info.Queue.Push(result)
+				vuln := common.Vuln{
+					Host: info.Host,
+					Port: info.Port,
+					User: user,
+					Pass: pass,
+				}
+				info.Queue.Push(vuln)
 			}
 			cmd := info.Command.TCPCommand
 			if cmd != "" {

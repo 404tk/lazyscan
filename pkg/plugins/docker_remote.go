@@ -40,7 +40,12 @@ func DockerRemote(info *common.HostInfo) error {
 		res.OperatingSystem, res.Architecture, res.KernelVersion, res.OSVersion)
 	log.Println(result)
 	if info.Queue != nil {
-		info.Queue.Push(result)
+		vuln := common.Vuln{
+			Host:   info.Host,
+			Port:   info.Port,
+			Unauth: true,
+		}
+		info.Queue.Push(vuln)
 	}
 	cmd := info.Command.UnixCommand
 	err = dockerEscape(cli, cmd)

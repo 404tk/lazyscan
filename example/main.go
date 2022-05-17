@@ -58,11 +58,14 @@ func main() {
 	resultQueue := queue.NewQueue() // 扫描结果队列
 	runner := runner.New(options)
 	result := runner.Enumerate(resultQueue)
-	// ICMP存活IP
+	// ICMP存活IP，不启用探活则默认全部存活，进一步扫描端口
 	fmt.Println("AliveHosts:", strings.Join(result.AliveHosts, ", "))
 	// 开放端口
 	fmt.Println("AlivePorts:", strings.Join(result.AlivePorts, ", "))
 	// 漏洞结果汇总
 	vulns := resultQueue.Dump()
-	fmt.Println("Vulns:", strings.Join(vulns, ", "))
+	for _, v := range vulns {
+		res := v.(common.Vuln)
+		fmt.Println(res)
+	}
 }

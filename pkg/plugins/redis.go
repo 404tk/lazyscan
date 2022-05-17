@@ -65,7 +65,12 @@ func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {
 		result := fmt.Sprintf("[%s] Redis password: %s", realhost, pass)
 		log.Println(result)
 		if info.Queue != nil {
-			info.Queue.Push(result)
+			vuln := common.Vuln{
+				Host: info.Host,
+				Port: info.Port,
+				Pass: pass,
+			}
+			info.Queue.Push(vuln)
 		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {
@@ -116,7 +121,12 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 		result := fmt.Sprintf("[%s] Redis unauthorized", realhost)
 		log.Println(result)
 		if info.Queue != nil {
-			info.Queue.Push(result)
+			vuln := common.Vuln{
+				Host:   info.Host,
+				Port:   info.Port,
+				Unauth: true,
+			}
+			info.Queue.Push(vuln)
 		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {
