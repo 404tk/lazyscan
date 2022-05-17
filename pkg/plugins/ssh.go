@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -12,22 +13,22 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func SshScan(info *common.HostInfo) (tmperr error) {
+func SshScan(info *common.HostInfo) error {
 	starttime := time.Now().Unix()
 	for _, user := range info.Usernames {
 		for _, pass := range info.Passwords {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := SshConn(info, user, pass)
-			if flag == true && err == nil {
+			if flag == true {
 				return err
 			} else {
 				if time.Now().Unix()-starttime > (int64(len(info.Usernames)*len(info.Passwords)) * info.Timeout) {
-					return err
+					return errors.New("timeout.")
 				}
 			}
 		}
 	}
-	return tmperr
+	return nil
 }
 
 func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
@@ -51,8 +52,8 @@ func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
 	if err == nil {
 		defer client.Close()
 		session, err := client.NewSession()
+		defer session.Close()
 		if err == nil {
-			defer session.Close()
 			flag = true
 			result := fmt.Sprintf("[%s:%s] SSH credential %s/%s", Host, Port, Username, Password)
 			log.Println(result)
@@ -60,7 +61,7 @@ func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
 				info.Queue.Push(result)
 			}
 			cmd := info.Command.UnixCommand
-			session.Run(cmd)
+			err = session.Run(cmd)
 		}
 	}
 	return flag, err

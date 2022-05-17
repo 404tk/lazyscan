@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -19,21 +20,21 @@ var (
 func RedisScan(info *common.HostInfo) error {
 	starttime := time.Now().Unix()
 	flag, err := RedisUnauth(info)
-	if flag == true && err == nil {
+	if flag == true {
 		return err
 	}
 	for _, pass := range info.Passwords {
 		pass = strings.Replace(pass, "{user}", "redis", -1)
 		flag, err := RedisConn(info, pass)
-		if flag == true && err == nil {
+		if flag == true {
 			return err
 		} else {
 			if time.Now().Unix()-starttime > (int64(len(info.Passwords)) * info.Timeout) {
-				return err
+				return errors.New("timeout.")
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {

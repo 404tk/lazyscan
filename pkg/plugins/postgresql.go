@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 
@@ -14,21 +15,22 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func PostgreScan(info *common.HostInfo) {
+func PostgreScan(info *common.HostInfo) error {
 	starttime := time.Now().Unix()
 	for _, user := range info.Usernames {
 		for _, pass := range info.Passwords {
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag, err := PostgresConn(info, user, pass)
-			if flag == true && err == nil {
-				return
+			if flag == true {
+				return err
 			} else {
 				if time.Now().Unix()-starttime > (int64(len(info.Usernames)*len(info.Passwords)) * info.Timeout) {
-					return
+					return errors.New("timeout.")
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {

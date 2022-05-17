@@ -25,20 +25,20 @@ type KubeAPIConfig struct {
 	Config    *rest.Config
 }
 
-func KubeAPIServerScan(info *common.HostInfo) bool {
+func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 	config := getConfig(info.Host, info.Port, info.Token)
 
 	// create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return false
+		return false, err
 	}
 	// list pods
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(info.Timeout)*time.Second)
 	defer cancel()
 	pods, err := clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return false
+		return false, err
 	}
 	result := fmt.Sprintf("[%s:%s] There are %d pods in the cluster.", info.Host, info.Port, len(pods.Items))
 	log.Println(result)
@@ -58,11 +58,12 @@ func KubeAPIServerScan(info *common.HostInfo) bool {
 		}
 		for _, p := range pods.Items {
 			for _, c := range p.Spec.Containers {
+				// 批量pods执行时忽略报错
 				kubeconf.kubeAPIExec(p.Name, p.Namespace, c.Name)
 			}
 		}
 	}
-	return true
+	return true, err
 }
 
 func (conf *KubeAPIConfig) kubeAPIExec(podName, namespace, container string) {

@@ -3,6 +3,7 @@ package plugins
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -13,21 +14,22 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
-func MssqlScan(info *common.HostInfo) {
+func MssqlScan(info *common.HostInfo) error {
 	starttime := time.Now().Unix()
 	for _, user := range info.Usernames {
 		for _, pass := range info.Passwords {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MssqlConn(info, user, pass)
-			if flag == true && err == nil {
-				return
+			if flag == true {
+				return err
 			} else {
 				if time.Now().Unix()-starttime > (int64(len(info.Usernames)*len(info.Passwords)) * info.Timeout) {
-					return
+					return errors.New("timeout.")
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func MssqlConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {

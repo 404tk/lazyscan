@@ -33,6 +33,7 @@ type Options struct {
 	Userdict         map[string][]string
 	Passwords        []string
 	PortList         map[string]string
+	Accounts         []string
 }
 
 type Output struct {
@@ -45,6 +46,7 @@ func New(opt *Options) *Options {
 	ParseScantype(opt)
 	ParseInput(opt)
 	ParsePass(opt)
+	ParseAccount(opt)
 	return opt
 }
 

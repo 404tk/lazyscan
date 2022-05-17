@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -13,28 +14,28 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-func EtcdScan(info *common.HostInfo) {
+func EtcdScan(info *common.HostInfo) error {
 	endpoint := fmt.Sprintf("%s:%s", info.Host, info.Port)
 	flag, result := getVersion(endpoint, info.Timeout)
 	if result != "" && info.Queue != nil {
 		info.Queue.Push(result)
 	}
 	if !flag {
-		return
+		return errors.New("not etcd v3.")
 	}
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{endpoint},
 		DialTimeout: time.Duration(info.Timeout) * time.Second,
 	})
 	if err != nil {
-		return
+		return err
 	}
 	defer cli.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(info.Timeout)*time.Second)
 	resp, err := cli.Get(ctx, "/", clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	cancel()
 	if err != nil {
-		return
+		return err
 	}
 	for _, k := range resp.Kvs {
 		// K8S场景
@@ -44,7 +45,7 @@ func EtcdScan(info *common.HostInfo) {
 			rangeResp, err := kv.Get(ctx, string(k.Key), clientv3.WithPrefix())
 			cancel()
 			if err != nil {
-				return
+				return err
 			}
 			for _, r := range rangeResp.Kvs {
 				if strings.Contains(string(r.Value), "#kubernetes.io/service-account-token") {
@@ -52,14 +53,15 @@ func EtcdScan(info *common.HostInfo) {
 					var tmpinfo common.HostInfo = *info
 					tmpinfo.Port = "6443"
 					tmpinfo.Token = pattern.FindString(string(r.Value))
-					check := KubeAPIServerScan(&tmpinfo)
+					check, err := KubeAPIServerScan(&tmpinfo)
 					if check {
-						return
+						return err
 					}
 				}
 			}
 		}
 	}
+	return err
 }
 
 // v2

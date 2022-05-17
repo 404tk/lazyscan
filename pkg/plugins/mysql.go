@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -16,22 +17,21 @@ import (
 )
 
 func MysqlScan(info *common.HostInfo) error {
-	var err error
 	starttime := time.Now().Unix()
 	for _, user := range info.Usernames {
 		for _, pass := range info.Passwords {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MysqlConn(info, user, pass)
-			if flag == true && err == nil {
+			if flag == true {
 				return err
 			} else {
 				if time.Now().Unix()-starttime > (int64(len(info.Usernames)*len(info.Passwords)) * info.Timeout) {
-					return err
+					return errors.New("timeout.")
 				}
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {

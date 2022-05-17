@@ -41,6 +41,7 @@ func main() {
 			"kube-api":      "6443",
 			"all":           "0",
 		},
+		Accounts: []string{"admin/123456", "test/test", "/"},
 	}
 	resultQueue := queue.NewQueue() // 扫描结果队列
 	runner := runner.New(options)
