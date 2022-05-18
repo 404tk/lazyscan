@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	"github.com/404tk/lazyscan/common"
@@ -30,5 +31,5 @@ func parseOptions() *runner.Options {
 func main() {
 	options := parseOptions()
 	runner := runner.New(options)
-	runner.Enumerate(nil)
+	runner.Run(context.TODO(), nil)
 }

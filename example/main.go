@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/404tk/lazyscan/common"
 	"github.com/404tk/lazyscan/common/queue"
@@ -11,10 +13,9 @@ import (
 
 func main() {
 	options := &runner.Options{
-		Host:     "172.16.61.2", // 扫描目标
-		HostFile: "",            // 扫描目标批量文本
-		NoPing:   false,         // 不探活直接扫
-		Scantype: "",            // 默认扫描全部，可指定服务名称
+		Host:     "172.16.61.2,172.16.61.3", // 扫描目标
+		NoPing:   false,                     // 不探活直接扫
+		Scantype: "",                        // 默认扫描全部，可指定服务名称
 		Timeout:  3,
 		Threads:  600,
 		LiveTop:  10,
@@ -57,7 +58,9 @@ func main() {
 	}
 	resultQueue := queue.NewQueue() // 扫描结果队列
 	runner := runner.New(options)
-	result := runner.Enumerate(resultQueue)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	result := runner.Run(ctx, resultQueue)
 	// ICMP存活IP，不启用探活则默认全部存活，进一步扫描端口
 	fmt.Println("AliveHosts:", strings.Join(result.AliveHosts, ", "))
 	// 开放端口

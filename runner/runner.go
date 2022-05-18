@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"log"
 	"reflect"
@@ -46,7 +47,23 @@ func New(opt *Options) *Options {
 	return opt
 }
 
-func (opt *Options) Enumerate(resultQueue *queue.Queue) Output {
+func (opt *Options) Run(ctx context.Context, resultQueue *queue.Queue) (result Output) {
+	scanctx, cancel := context.WithCancel(context.Background())
+	go opt.Enumerate(scanctx, cancel, resultQueue, &result)
+	for {
+		select {
+		case <-scanctx.Done():
+			return
+		case <-ctx.Done():
+			log.Println("scan task is forcibly stop.")
+			return
+		default:
+			time.Sleep(1000 * time.Microsecond)
+		}
+	}
+}
+
+func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, resultQueue *queue.Queue, result *Output) {
 	log.Println("Start infoscan...")
 	Hosts, err := utils.ParseIP(opt.Host, opt.HostFile)
 	if err != nil {
@@ -103,12 +120,11 @@ func (opt *Options) Enumerate(resultQueue *queue.Queue) Output {
 			}
 		}
 	}
+	result.AliveHosts = Hosts
+	result.AliveHosts = AlivePorts
 	wg.Wait()
 	log.Println("scan end.")
-	return Output{
-		AliveHosts: Hosts,
-		AlivePorts: AlivePorts,
-	}
+	cancel()
 }
 
 func addScan(scantype string, info common.HostInfo, ch chan struct{}, wg *sync.WaitGroup) {
