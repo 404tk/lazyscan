@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/404tk/lazyscan/common"
 	"github.com/404tk/lazyscan/common/queue"
@@ -57,10 +56,11 @@ func main() {
 		Accounts: []string{"admin/123456", "test/test", "/"},
 	}
 	resultQueue := queue.NewQueue() // 扫描结果队列
-	runner := runner.New(options)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	result := runner.Run(ctx, resultQueue)
+	runner, err := runner.New(options)
+	if err != nil {
+		return
+	}
+	result := runner.Run(context.TODO(), resultQueue)
 	// ICMP存活IP，不启用探活则默认全部存活，进一步扫描端口
 	fmt.Println("AliveHosts:", strings.Join(result.AliveHosts, ", "))
 	// 开放端口

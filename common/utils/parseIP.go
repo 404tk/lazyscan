@@ -147,12 +147,13 @@ func IPRange(c *net.IPNet) string {
 
 // 按行读ip
 func Readipfile(filename string) ([]string, error) {
+	var content []string
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("Open %s error, %v", filename, err)
+		log.Printf("Open %s error, %v\n", filename, err)
+		return content, err
 	}
 	defer file.Close()
-	var content []string
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {

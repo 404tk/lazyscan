@@ -39,12 +39,16 @@ type Output struct {
 	AlivePorts []string
 }
 
-func New(opt *Options) *Options {
-	ParseScantype(opt)
-	ParseInput(opt)
+func New(opt *Options) (*Options, error) {
+	if !ParseInput(opt) {
+		return opt, errors.New("Host is none.")
+	}
+	if !ParseScantype(opt) {
+		return opt, errors.New("ScanType error!")
+	}
 	ParsePass(opt)
 	ParseAccount(opt)
-	return opt
+	return opt, nil
 }
 
 func (opt *Options) Run(ctx context.Context, resultQueue *queue.Queue) (result Output) {
@@ -67,7 +71,9 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 	log.Println("Start infoscan...")
 	Hosts, err := utils.ParseIP(opt.Host, opt.HostFile)
 	if err != nil {
-		log.Fatalf("Parse IP ERROR: %s\n", err)
+		log.Printf("Parse IP ERROR: %s\n", err)
+		cancel()
+		return
 	}
 	var ch = make(chan struct{}, opt.Threads)
 	var wg = sync.WaitGroup{}

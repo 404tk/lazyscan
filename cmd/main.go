@@ -30,6 +30,9 @@ func parseOptions() *runner.Options {
 
 func main() {
 	options := parseOptions()
-	runner := runner.New(options)
+	runner, err := runner.New(options)
+	if err != nil {
+		return
+	}
 	runner.Run(context.TODO(), nil)
 }

@@ -8,17 +8,18 @@ import (
 	"github.com/404tk/lazyscan/common/utils"
 )
 
-func ParseScantype(opt *Options) {
+func ParseScantype(opt *Options) bool {
 	if len(opt.PortList) == 0 {
 		opt.PortList = common.PortList
 	}
 	if opt.Ports != "" {
-		return
+		return true
 	}
 	if opt.Scantype != "" {
 		port, ok := opt.PortList[opt.Scantype]
 		if !ok {
-			log.Fatalf("The specified scan type does not exist: %s\n", opt.Scantype)
+			log.Printf("The specified scan type does not exist: %s\n", opt.Scantype)
+			return false
 		}
 		opt.Ports = port
 		log.Printf("Start scan the port: %s\n", opt.Ports)
@@ -29,12 +30,15 @@ func ParseScantype(opt *Options) {
 		}
 		opt.Ports = strings.Join(ports, ",")
 	}
+	return true
 }
 
-func ParseInput(opt *Options) {
+func ParseInput(opt *Options) bool {
 	if opt.Host == "" && opt.HostFile == "" {
-		log.Fatalf("Host is none.\n")
+		log.Println("Host is none.")
+		return false
 	}
+	return true
 }
 
 func ParsePass(opt *Options) {
