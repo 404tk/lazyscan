@@ -127,7 +127,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 		}
 	}
 	result.AliveHosts = Hosts
-	result.AliveHosts = AlivePorts
+	result.AlivePorts = AlivePorts
 	wg.Wait()
 	log.Println("scan end.")
 	cancel()
