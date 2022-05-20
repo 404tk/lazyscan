@@ -22,6 +22,7 @@ func parseOptions() *runner.Options {
 	flag.IntVar(&options.Threads, "t", 600, "Thread nums")
 	flag.IntVar(&options.LiveTop, "top", 10, "show live len top")
 	flag.StringVar(&options.Password, "pwd", "", "custom password")
+	flag.BoolVar(&options.RedisListen, "nr", false, "Don't start redis rogue server")
 	flag.StringVar(&options.RedisRogueServer, "rs", "", "redis rogue server, -rs 192.168.1.2:6380")
 	flag.Parse()
 

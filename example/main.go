@@ -35,7 +35,8 @@ func main() {
 				ExecCommand: "beacon.sh",
 			},
 		},
-		RedisRogueServer: "192.168.1.2:6380", // 本机IP+监听端口
+		RedisListen:      false,              // 是否运行时开启RedisRogueServer监听
+		RedisRogueServer: "192.168.1.2:6380", // 监听IP+监听端口，支持外部监听
 		Userdict: map[string][]string{
 			"mysql":      {"root"},
 			"ssh":        {"root"},

@@ -27,6 +27,7 @@ type Options struct {
 	LiveTop          int
 	Password         string
 	Downloader       common.Downloader
+	RedisListen      bool
 	RedisRogueServer string
 	Userdict         map[string][]string
 	Passwords        []string
@@ -91,7 +92,10 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 				TCPCommand:  utils.GenerateCMD("tcp", opt.Downloader),
 				WinCommand:  utils.GenerateCMD("win", opt.Downloader),
 			}
-			var redisListen bool
+			if opt.RedisListen {
+				go opt.RunRedisRogueServer()
+				time.Sleep(1 * time.Second)
+			}
 			log.Println("start vulscan...")
 			for _, targetIP := range AlivePorts {
 				var info = common.HostInfo{
@@ -106,20 +110,10 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 				if opt.Scantype == "" {
 					m := opt.getService(info.Port)
 					if m != "" {
-						if m == "redis" && !redisListen {
-							redisListen = true
-							go opt.RunRedisRogueServer()
-							time.Sleep(1 * time.Second)
-						}
 						info.Usernames = opt.Userdict[m]
 						addScan(m, info, ch, &wg) //plugins scan
 					}
 				} else {
-					if opt.Scantype == "redis" && !redisListen {
-						redisListen = true
-						go opt.RunRedisRogueServer()
-						time.Sleep(1 * time.Second)
-					}
 					info.Usernames = opt.Userdict[opt.Scantype]
 					addScan(opt.Scantype, info, ch, &wg)
 				}
