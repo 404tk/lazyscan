@@ -15,29 +15,31 @@ import (
 	"golang.org/x/net/icmp"
 )
 
-var (
+type IcmpLoader struct {
 	AliveHosts []string
-	OS         = runtime.GOOS
-	ExistHosts = make(map[string]struct{})
+	ExistHosts map[string]struct{}
 	livewg     sync.WaitGroup
-)
+}
+
+var OS = runtime.GOOS
 
 func CheckLive(hostslist []string, LiveTop int) []string {
+	loader := IcmpLoader{ExistHosts: make(map[string]struct{})}
 	chanHosts := make(chan string, len(hostslist))
 	go func() {
 		for ip := range chanHosts {
-			if _, ok := ExistHosts[ip]; !ok && utils.IsContain(hostslist, ip) {
-				ExistHosts[ip] = struct{}{}
-				AliveHosts = append(AliveHosts, ip)
+			if _, ok := loader.ExistHosts[ip]; !ok && utils.IsContain(hostslist, ip) {
+				loader.ExistHosts[ip] = struct{}{}
+				loader.AliveHosts = append(loader.AliveHosts, ip)
 			}
-			livewg.Done()
+			loader.livewg.Done()
 		}
 	}()
 
 	//优先尝试监听本地icmp,批量探测
 	conn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err == nil {
-		RunIcmp1(hostslist, conn, chanHosts)
+		loader.RunIcmp1(hostslist, conn, chanHosts)
 	} else {
 		//尝试无监听icmp探测
 		conn, err := net.DialTimeout("ip4:icmp", "127.0.0.1", 3*time.Second)
@@ -47,37 +49,37 @@ func CheckLive(hostslist []string, LiveTop int) []string {
 			}
 		}()
 		if err == nil {
-			RunIcmp2(hostslist, chanHosts)
+			loader.RunIcmp2(hostslist, chanHosts)
 		} else {
 			//使用ping探测
 			// fmt.Println("The current user permissions unable to send icmp packets")
 			// fmt.Println("start ping")
-			RunPing(hostslist, chanHosts)
+			loader.RunPing(hostslist, chanHosts)
 		}
 	}
 
-	livewg.Wait()
+	loader.livewg.Wait()
 	close(chanHosts)
 
 	if len(hostslist) > 1000 {
-		arrTop, arrLen := ArrayCountValueTop(AliveHosts, LiveTop, true)
+		arrTop, arrLen := ArrayCountValueTop(loader.AliveHosts, LiveTop, true)
 		for i := 0; i < len(arrTop); i++ {
 			output := fmt.Sprintf("[*] LiveTop %s 段存活数量为: %d\n", arrTop[i]+".0.0/16", arrLen[i])
 			log.Printf(output)
 		}
 	}
 	if len(hostslist) > 256 {
-		arrTop, arrLen := ArrayCountValueTop(AliveHosts, LiveTop, false)
+		arrTop, arrLen := ArrayCountValueTop(loader.AliveHosts, LiveTop, false)
 		for i := 0; i < len(arrTop); i++ {
 			output := fmt.Sprintf("[*] LiveTop %s 段存活数量为: %d", arrTop[i]+".0/24", arrLen[i])
 			log.Println(output)
 		}
 	}
 
-	return AliveHosts
+	return loader.AliveHosts
 }
 
-func RunIcmp1(hostslist []string, conn *icmp.PacketConn, chanHosts chan string) {
+func (l *IcmpLoader) RunIcmp1(hostslist []string, conn *icmp.PacketConn, chanHosts chan string) {
 	endflag := false
 	go func() {
 		for {
@@ -87,7 +89,7 @@ func RunIcmp1(hostslist []string, conn *icmp.PacketConn, chanHosts chan string) 
 			msg := make([]byte, 100)
 			_, sourceIP, _ := conn.ReadFrom(msg)
 			if sourceIP != nil {
-				livewg.Add(1)
+				l.livewg.Add(1)
 				chanHosts <- sourceIP.String()
 			}
 		}
@@ -101,7 +103,7 @@ func RunIcmp1(hostslist []string, conn *icmp.PacketConn, chanHosts chan string) 
 	//根据hosts数量修改icmp监听时间
 	start := time.Now()
 	for {
-		if len(AliveHosts) == len(hostslist) {
+		if len(l.AliveHosts) == len(hostslist) {
 			break
 		}
 		since := time.Now().Sub(start)
@@ -120,7 +122,7 @@ func RunIcmp1(hostslist []string, conn *icmp.PacketConn, chanHosts chan string) 
 	conn.Close()
 }
 
-func RunIcmp2(hostslist []string, chanHosts chan string) {
+func (l *IcmpLoader) RunIcmp2(hostslist []string, chanHosts chan string) {
 	num := 1000
 	if len(hostslist) < num {
 		num = len(hostslist)
@@ -132,7 +134,7 @@ func RunIcmp2(hostslist []string, chanHosts chan string) {
 		limiter <- struct{}{}
 		go func(host string) {
 			if icmpalive(host) {
-				livewg.Add(1)
+				l.livewg.Add(1)
 				chanHosts <- host
 			}
 			<-limiter
@@ -170,7 +172,7 @@ func icmpalive(host string) bool {
 	return true
 }
 
-func RunPing(hostslist []string, chanHosts chan string) {
+func (l *IcmpLoader) RunPing(hostslist []string, chanHosts chan string) {
 	var bsenv = ""
 	if OS != "windows" {
 		bsenv = "/bin/bash"
@@ -182,7 +184,7 @@ func RunPing(hostslist []string, chanHosts chan string) {
 		limiter <- struct{}{}
 		go func(host string) {
 			if ExecCommandPing(host, bsenv) {
-				livewg.Add(1)
+				l.livewg.Add(1)
 				chanHosts <- host
 			}
 			<-limiter
