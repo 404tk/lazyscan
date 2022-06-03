@@ -5,6 +5,7 @@ import "github.com/404tk/lazyscan/common/queue"
 type HostInfo struct {
 	Host             string
 	Port             string
+	Url              string
 	IfTlS            bool
 	Timeout          int64
 	Usernames        []string
@@ -34,10 +35,11 @@ type Loader struct {
 }
 
 type Vuln struct {
-	Host   string
-	Port   string
-	Unauth bool
-	User   string
-	Pass   string
-	Token  string
+	Host    string
+	Port    string
+	Unauth  bool
+	User    string
+	Pass    string
+	Token   string
+	PocName string
 }

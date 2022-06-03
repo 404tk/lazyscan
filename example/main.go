@@ -46,6 +46,7 @@ func main() {
 		Passwords: []string{"123456", "{user}", "{user}@123"},
 		PortList: map[string]string{
 			"ssh":           "22",
+			"web":           "80,443,8080",
 			"mssql":         "1433",
 			"docker-remote": "2375",
 			"etcd":          "2379",
