@@ -109,6 +109,7 @@ func MysqlExec(db *sql.DB, cmd string) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	cmd = strings.ReplaceAll(cmd, "'", "\\'")
 	db.ExecContext(ctx, fmt.Sprintf("select sys_eval('cmd /c %s')", cmd))
 	cancel()
 	db.Exec("DROP FUNCTION sys_eval")
