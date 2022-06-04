@@ -16,3 +16,4 @@
 ## Web PoC插件  
 - PHP-CGI远程代码执行漏洞（CVE-2012-1823）  
 - F5 BIG-IP 未授权RCE（CVE-2022-1388）  
+- Atlassian Confluence远程代码执行漏洞（CVE-2022-26134）  
