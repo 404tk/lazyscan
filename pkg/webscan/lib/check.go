@@ -77,6 +77,11 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Command) bool {
 		return false
 	}
 	variableMap := make(map[string]interface{})
+	// loader加载
+	variableMap["unixloader"] = cmds.UnixCommand
+	variableMap["tcploader"] = cmds.TCPCommand
+	variableMap["winloader"] = cmds.WinCommand
+	variableMap["ord_unixloader"] = ord(fmt.Sprintf("%v", []byte(cmds.UnixCommand)))
 	variableMap["request"] = req
 
 	// 现在假定set中payload作为最后产出，那么先排序解析其他的自定义变量，更新map[string]interface{}后再来解析payload
@@ -177,9 +182,6 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Command) bool {
 
 	DoExploit := func(exp []Rules) {
 		for _, rule := range exp {
-			variableMap["unixloader"] = cmds.UnixCommand
-			variableMap["tcploader"] = cmds.TCPCommand
-			variableMap["winloader"] = cmds.WinCommand
 			getResp(oReq, variableMap, req, rule)
 		}
 	}

@@ -57,6 +57,10 @@ func NewEnvOption() CustomLib {
 				decls.NewOverload("md5_string",
 					[]*exprpb.Type{decls.String},
 					decls.String)),
+			decls.NewFunction("ord",
+				decls.NewOverload("ord_string",
+					[]*exprpb.Type{decls.String},
+					decls.String)),
 			decls.NewFunction("randomInt",
 				decls.NewOverload("randomInt_int_int",
 					[]*exprpb.Type{decls.Int, decls.Int},
@@ -153,6 +157,16 @@ func NewEnvOption() CustomLib {
 						return types.ValOrErr(value, "unexpected type '%v' passed to md5_string", value.Type())
 					}
 					return types.String(fmt.Sprintf("%x", md5.Sum([]byte(v))))
+				},
+			},
+			&functions.Overload{
+				Operator: "ord_string",
+				Unary: func(value ref.Val) ref.Val {
+					v, ok := value.(types.String)
+					if !ok {
+						return types.ValOrErr(value, "unexpected type '%v' passed to ord_string", value.Type())
+					}
+					return types.String(ord(fmt.Sprintf("%v", []byte(v))))
 				},
 			},
 			&functions.Overload{
@@ -591,4 +605,8 @@ func evalset(env *cel.Env, variableMap map[string]interface{}) {
 			}
 		}
 	}
+}
+
+func ord(b string) string {
+	return strings.Join(strings.Split(b[1:len(b)-1], " "), ",")
 }
