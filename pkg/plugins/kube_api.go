@@ -66,16 +66,16 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 				// 批量pods执行时忽略报错
 				api := fmt.Sprintf(opts.Endpoint+
 					"/api/v1/namespaces/%s/pods/%s/exec"+
-					"?container=%s&command=%2Fbin%2Fsh&command=-c&command=%s&stderr=true&stdin=true&stdout=true",
+					"?container=%s&command=/bin/sh&command=-c&command=%s&stderr=true&stdin=true&stdout=true",
 					ns, pn, c.Get("name").String(), url.QueryEscape(cmd))
-				kubeconf.kubeAPIExec(pn, ns, c.Get("name").String(), api)
+				kubeconf.kubeAPIExec(api)
 			}
 		}
 	}
 	return true, err
 }
 
-func (conf *KubeAPIConfig) kubeAPIExec(podName, namespace, container, api string) {
+func (conf *KubeAPIConfig) kubeAPIExec(api string) {
 	u, err := url.ParseRequestURI(api)
 	executor, err := remotecommand.NewSPDYExecutor(conf.Config, "POST", u)
 	if err != nil {
