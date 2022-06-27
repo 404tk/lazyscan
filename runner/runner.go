@@ -20,6 +20,7 @@ type Options struct {
 	Host             string
 	HostFile         string
 	Ports            string
+	Token            string
 	NoPing           bool
 	Scantype         string
 	Timeout          int64
@@ -101,6 +102,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 				var info = common.HostInfo{
 					Host:             strings.Split(targetIP, ":")[0],
 					Port:             strings.Split(targetIP, ":")[1],
+					Token:            opt.Token,
 					Passwords:        opt.Passwords,
 					Timeout:          opt.Timeout,
 					Command:          cmds,

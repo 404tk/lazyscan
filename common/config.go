@@ -37,4 +37,5 @@ var PortList = map[string]string{
 	"postgresql":    "5432",
 	"redis":         "6379",
 	"kube-api":      "6443",
+	"kubelet":       "10250",
 }

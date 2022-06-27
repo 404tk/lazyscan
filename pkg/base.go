@@ -11,5 +11,6 @@ var PluginList = map[string]interface{}{
 	"mssql":         plugins.MssqlScan,
 	"postgresql":    plugins.PostgreScan,
 	"kube-api":      plugins.KubeAPIServerScan,
+	"kubelet":       plugins.KubeletScan,
 	"web":           plugins.WebVulnScan,
 }

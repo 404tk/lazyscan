@@ -16,6 +16,7 @@ func parseOptions() *runner.Options {
 	flag.StringVar(&options.Host, "h", "", "IP address or cidr")
 	flag.StringVar(&options.HostFile, "hf", "", "host file, -hf ip.txt")
 	flag.StringVar(&options.Ports, "p", "", "Select a port")
+	flag.StringVar(&options.Token, "token", "", "K8s api-server token")
 	flag.BoolVar(&options.NoPing, "np", false, "not to ping")
 	flag.StringVar(&options.Scantype, "m", "", "Select scan type ,as: -m etcd")
 	flag.Int64Var(&options.Timeout, "time", 3, "Set timeout")

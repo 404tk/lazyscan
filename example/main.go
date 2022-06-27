@@ -54,6 +54,7 @@ func main() {
 			"postgresql":    "5432",
 			"redis":         "6379",
 			"kube-api":      "6443",
+			"kubelet":       "10250",
 		},
 		Accounts: []string{"admin/123456", "test/test", "/"},
 	}
