@@ -22,9 +22,11 @@ type PocInfo struct {
 var Pocs embed.FS
 var once sync.Once
 var AllPocs []*lib.Poc
+var HostInfo *common.HostInfo
 
 func WebScan(info *common.HostInfo) {
 	var num = 20 // 默认限制并发20
+	HostInfo = info
 	lib.Inithttp(num, info.Timeout)
 	once.Do(initpoc)
 	Execute(info, num)
@@ -42,6 +44,7 @@ func Execute(info *common.HostInfo, num int) {
 }
 
 func initpoc() {
+	var pocLen, customPocLen int
 	entries, err := Pocs.ReadDir("pocs")
 	if err != nil {
 		log.Printf("[-] init poc error: %v\n", err)
@@ -52,7 +55,20 @@ func initpoc() {
 		if strings.HasSuffix(path, ".yaml") {
 			if poc, _ := lib.LoadPoc(path, Pocs); poc != nil {
 				AllPocs = append(AllPocs, poc)
+				pocLen++
 			}
 		}
 	}
+	if len(HostInfo.Pocs) > 0 {
+		for _, customPocStr := range HostInfo.Pocs {
+			customPoc, err := lib.LoadPocStr(customPocStr)
+			if err != nil {
+				log.Printf("[-] init cutom poc error: %v\n", err)
+				return
+			}
+			AllPocs = append(AllPocs, customPoc)
+			customPocLen++
+		}
+	}
+	log.Printf("Load Poc Success systemPoc: %d, customPoc: %d", pocLen, customPocLen)
 }

@@ -73,3 +73,12 @@ func ParseAccount(opt *Options) {
 		}
 	}
 }
+
+func ParsePocs(opt *Options) {
+	for _, poc := range opt.Pocs {
+		if poc != "" && !utils.IsContain(opt.Pocs, poc) {
+			opt.Pocs = append(opt.Pocs, poc)
+		}
+	}
+
+}

@@ -27,9 +27,10 @@ func CheckMultiPoc(req *http.Request, pocs []*Poc, workers int, info *common.Hos
 	for i := 0; i < workers; i++ {
 		go func() {
 			for task := range tasks {
+				log.Printf("start check Poc: %s %s", task.Req.URL, task.Poc.Name)
 				isVul := executePoc(task.Req, task.Poc, info.Command)
 				if isVul {
-					result := fmt.Sprintf("[+] %s %s", task.Req.URL, task.Poc.Name)
+					result := fmt.Sprintf("[+] Found Vuln: %s %s", task.Req.URL, task.Poc.Name)
 					log.Println(result)
 					if info.Queue != nil {
 						vuln := common.Vuln{
@@ -639,6 +640,16 @@ func LoadPoc(fileName string, Pocs embed.FS) (*Poc, error) {
 	err = yaml.Unmarshal(yamlFile, p)
 	if err != nil {
 		log.Printf("[-] load poc %s error: %v", fileName, err)
+		return nil, err
+	}
+	return p, err
+}
+
+func LoadPocStr(pocContent string) (*Poc, error) {
+	p := &Poc{}
+	err := yaml.Unmarshal([]byte(pocContent), p)
+	if err != nil {
+		log.Printf("[-] load poc %s error: %v", pocContent, err)
 		return nil, err
 	}
 	return p, err
