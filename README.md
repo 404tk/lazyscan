@@ -12,6 +12,8 @@
 - etcd未授权
 - Kube API Server未授权
 - Docker Daemon未授权
+- Kubelet未授权
+- SMB弱口令
 
 ## Web PoC插件  
 - PHP-CGI远程代码执行漏洞（CVE-2012-1823）  
