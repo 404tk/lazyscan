@@ -13,4 +13,5 @@ var PluginList = map[string]interface{}{
 	"kube-api":      plugins.KubeAPIServerScan,
 	"kubelet":       plugins.KubeletScan,
 	"web":           plugins.WebVulnScan,
+	"smb":           plugins.SMBScan,
 }

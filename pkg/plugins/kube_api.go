@@ -53,6 +53,10 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 		for _, p := range pods {
 			pn := p.Get("metadata.name").String()
 			ns := p.Get("metadata.namespace").String()
+			status := p.Get("status.phase").String()
+			if status != "Running" {
+				continue
+			}
 			for _, c := range p.Get("spec.containers").Array() {
 				// 批量pods执行时忽略报错
 				api := fmt.Sprintf(opts.Endpoint+

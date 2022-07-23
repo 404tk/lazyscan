@@ -21,6 +21,7 @@ var DefaultDownloader = Downloader{
 var Userdict = map[string][]string{
 	"mysql":      {"root"},
 	"ssh":        {"root"},
+	"smb":        {"Administrator"},
 	"mssql":      {"sa"},
 	"postgresql": {"postgres"},
 }
@@ -29,6 +30,7 @@ var Passwords = []string{"123456", "{user}", "{user}@123"}
 
 var PortList = map[string]string{
 	"ssh":           "22",
+	"smb":           "445",
 	"web":           "80,443,8080",
 	"mssql":         "1433",
 	"docker-remote": "2375",
