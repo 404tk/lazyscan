@@ -10,7 +10,8 @@ type HostInfo struct {
 	Timeout          int64
 	Usernames        []string
 	Passwords        []string
-	Pocs             []string
+	CustomPocs       []string
+	DefaultPocsName  []string
 	Token            string
 	Command          Command
 	RedisRogueServer string

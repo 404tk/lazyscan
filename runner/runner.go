@@ -34,7 +34,8 @@ type Options struct {
 	Passwords        []string
 	PortList         map[string]string
 	Accounts         []string
-	Pocs             []string
+	CustomPocs       []string
+	DefaultPocsName  []string
 }
 
 type Output struct {
@@ -106,7 +107,8 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 					Port:             strings.Split(targetIP, ":")[1],
 					Token:            opt.Token,
 					Passwords:        opt.Passwords,
-					Pocs:             opt.Pocs,
+					CustomPocs:       opt.CustomPocs,
+					DefaultPocsName:  opt.DefaultPocsName,
 					Timeout:          opt.Timeout,
 					Command:          cmds,
 					RedisRogueServer: opt.RedisRogueServer,

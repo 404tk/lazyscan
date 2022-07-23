@@ -75,9 +75,14 @@ func ParseAccount(opt *Options) {
 }
 
 func ParsePocs(opt *Options) {
-	for _, poc := range opt.Pocs {
-		if poc != "" && !utils.IsContain(opt.Pocs, poc) {
-			opt.Pocs = append(opt.Pocs, poc)
+	for _, customPoc := range opt.CustomPocs {
+		if customPoc != "" && !utils.IsContain(opt.CustomPocs, customPoc) {
+			opt.CustomPocs = append(opt.CustomPocs, customPoc)
+		}
+	}
+	for _, defaultPocName := range opt.DefaultPocsName {
+		if defaultPocName != "" && !utils.IsContain(opt.DefaultPocsName, defaultPocName) {
+			opt.DefaultPocsName = append(opt.DefaultPocsName, defaultPocName)
 		}
 	}
 
