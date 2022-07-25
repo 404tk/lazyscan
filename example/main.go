@@ -58,8 +58,9 @@ func main() {
 			"kube-api":      "6443",
 			"kubelet":       "10250",
 		},
-		Accounts: []string{"admin/123456", "test/test", "/"},
-		Pocs: []string{`name: poc-yaml-confluence-cve-2022-26134
+		Accounts:        []string{"admin/123456", "test/test", "/"},
+		DefaultPocsName: []string{"poc-yaml-confluence-cve-2022-26134"},
+		CustomPocs: []string{`name: poc-yaml-confluence-cve-2022-26134
 set:
     r1: randomInt(800000000, 1000000000)
     r2: randomInt(800000000, 1000000000)
