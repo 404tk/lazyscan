@@ -65,10 +65,14 @@ func initDefaultPoc() {
 func loadAllpocs(info *common.HostInfo) []*lib.Poc {
 	var defaultPocLen, customPocLen int
 	var allPocs []*lib.Poc
-	for _, defaultPoc := range DefaultPocs {
-		if utils.IsContain(info.DefaultPocsName, defaultPoc.Name) {
-			allPocs = append(allPocs, defaultPoc)
-			defaultPocLen++
+	if len(info.DefaultPocsName) == 1 && info.DefaultPocsName[0] == "all" {
+		allPocs = append(allPocs, DefaultPocs...)
+	} else {
+		for _, defaultPoc := range DefaultPocs {
+			if utils.IsContain(info.DefaultPocsName, defaultPoc.Name) {
+				allPocs = append(allPocs, defaultPoc)
+				defaultPocLen++
+			}
 		}
 	}
 

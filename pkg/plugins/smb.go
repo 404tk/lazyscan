@@ -14,7 +14,7 @@ import (
 	"github.com/hirochachacha/go-smb2"
 )
 
-func SMBScan(info *common.HostInfo) (tmperr error) {
+func SMBScan(info *common.HostInfo) error {
 	starttime := time.Now().Unix()
 	for _, user := range info.Usernames {
 		for _, pass := range info.Passwords {
@@ -29,7 +29,7 @@ func SMBScan(info *common.HostInfo) (tmperr error) {
 			}
 		}
 	}
-	return tmperr
+	return nil
 }
 
 func SMBConn(info *common.HostInfo, user string, pass string) (flag bool, err error) {
