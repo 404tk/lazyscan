@@ -76,7 +76,7 @@ func loadAllpocs(info *common.HostInfo) []*lib.Poc {
 		for _, customPocStr := range info.CustomPocs {
 			customPoc, err := lib.LoadPocStr(customPocStr)
 			if err != nil {
-				log.Printf("[-] init cutom poc error: %v\n", err)
+				continue
 			}
 			allPocs = append(allPocs, customPoc)
 			customPocLen++

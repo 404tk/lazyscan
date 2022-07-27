@@ -649,7 +649,7 @@ func LoadPocStr(pocContent string) (*Poc, error) {
 	p := &Poc{}
 	err := yaml.Unmarshal([]byte(pocContent), p)
 	if err != nil {
-		log.Printf("[-] load poc %s error: %v", pocContent, err)
+		log.Printf("[-] load custom poc error: %v \n%s", err, pocContent)
 		return nil, err
 	}
 	return p, err
