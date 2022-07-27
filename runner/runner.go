@@ -23,6 +23,7 @@ type Options struct {
 	Token            string
 	NoPing           bool
 	Scantype         string
+	Poc              string
 	Timeout          int64
 	Threads          int
 	LiveTop          int

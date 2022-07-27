@@ -85,5 +85,7 @@ func ParsePocs(opt *Options) {
 			opt.DefaultPocsName = append(opt.DefaultPocsName, defaultPocName)
 		}
 	}
-
+	if opt.Poc != "" {
+		opt.DefaultPocsName = append(opt.DefaultPocsName, opt.Poc)
+	}
 }

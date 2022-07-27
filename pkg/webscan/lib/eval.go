@@ -520,7 +520,6 @@ func getRespBody(oResp *http.Response) ([]byte, error) {
 			buf := make([]byte, 1024)
 			n, err := gr.Read(buf)
 			if err != nil && err != io.EOF {
-				//utils.Logger.Error(err)
 				return nil, err
 			}
 			if n == 0 {
