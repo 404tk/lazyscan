@@ -42,6 +42,9 @@ func NewEnvOption() CustomLib {
 		cel.Declarations(
 			decls.NewIdent("request", decls.NewObjectType("lib.Request"), nil),
 			decls.NewIdent("response", decls.NewObjectType("lib.Response"), nil),
+			decls.NewVar("unixloader", decls.String),
+			decls.NewVar("tcploader", decls.String),
+			decls.NewVar("winloader", decls.String),
 		),
 		cel.Declarations(
 			// functions
