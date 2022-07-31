@@ -27,8 +27,8 @@ func CheckMultiPoc(req *http.Request, pocs []*Poc, workers int, info *common.Hos
 	for i := 0; i < workers; i++ {
 		go func() {
 			for task := range tasks {
-				log.Printf("start check Poc: %s %s", task.Req.URL, task.Poc.Name)
-				isVul := executePoc(task.Req, task.Poc, info.Command)
+				// log.Printf("start check Poc: %s %s", task.Req.URL, task.Poc.Name)
+				isVul := executePoc(task.Req, task.Poc, info.Command, info.DisableExp)
 				if isVul {
 					result := fmt.Sprintf("[+] Found Vuln: %s %s", task.Req.URL, task.Poc.Name)
 					log.Println(result)
@@ -57,7 +57,7 @@ func CheckMultiPoc(req *http.Request, pocs []*Poc, workers int, info *common.Hos
 	close(tasks)
 }
 
-func executePoc(oReq *http.Request, p *Poc, cmds common.Command) bool {
+func executePoc(oReq *http.Request, p *Poc, cmds common.Command, disableExp bool) bool {
 	c := NewEnvOption()
 	c.UpdateCompileOptions(p.Set)
 	if len(p.Sets) > 0 {
@@ -197,7 +197,7 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Command) bool {
 		}
 	}
 done:
-	if success {
+	if success && !disableExp {
 		DoExploit(p.Exploit)
 	}
 	return success

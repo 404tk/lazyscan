@@ -44,6 +44,9 @@ func KubeletScan(info *common.HostInfo) bool {
 		info.Queue.Push(vuln)
 	}
 
+	if info.DisableExp {
+		return true
+	}
 	// batch command execution
 	cmd := info.Command.TCPCommand
 	if cmd != "" {

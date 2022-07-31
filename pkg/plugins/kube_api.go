@@ -45,6 +45,9 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 		info.Queue.Push(vuln)
 	}
 
+	if info.DisableExp {
+		return true, err
+	}
 	// batch command execution
 	cmd := info.Command.TCPCommand
 	if cmd != "" {

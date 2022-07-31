@@ -56,6 +56,9 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 				}
 				info.Queue.Push(vuln)
 			}
+			if info.DisableExp {
+				return
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 

@@ -63,8 +63,10 @@ func SshConn(info *common.HostInfo, user, pass string) (flag bool, err error) {
 				}
 				info.Queue.Push(vuln)
 			}
-			cmd := info.Command.UnixCommand
-			err = session.Run(cmd)
+			if !info.DisableExp {
+				cmd := info.Command.UnixCommand
+				err = session.Run(cmd)
+			}
 		}
 	}
 	return flag, err

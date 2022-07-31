@@ -47,8 +47,10 @@ func DockerRemote(info *common.HostInfo) error {
 		}
 		info.Queue.Push(vuln)
 	}
-	cmd := info.Command.UnixCommand
-	err = dockerEscape(cli, cmd)
+	if !info.DisableExp {
+		cmd := info.Command.UnixCommand
+		err = dockerEscape(cli, cmd)
+	}
 	return err
 }
 

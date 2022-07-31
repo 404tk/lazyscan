@@ -72,6 +72,9 @@ func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {
 			}
 			info.Queue.Push(vuln)
 		}
+		if info.DisableExp {
+			return
+		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {
 			return flag, err
@@ -127,6 +130,9 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 				Unauth: true,
 			}
 			info.Queue.Push(vuln)
+		}
+		if info.DisableExp {
+			return
 		}
 		dbfilename, dir, err = getconfig(conn)
 		if err != nil {

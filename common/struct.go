@@ -6,7 +6,7 @@ type HostInfo struct {
 	Host             string
 	Port             string
 	Url              string
-	IfTlS            bool
+	DisableExp       bool
 	Timeout          int64
 	Usernames        []string
 	Passwords        []string

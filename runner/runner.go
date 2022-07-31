@@ -38,6 +38,7 @@ type Options struct {
 	Accounts         []string
 	CustomPocs       []string
 	DefaultPocsName  []string
+	DisableExp       bool
 }
 
 type Output struct {
@@ -113,6 +114,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 				var info = common.HostInfo{
 					Host:             strings.Split(targetIP, ":")[0],
 					Port:             strings.Split(targetIP, ":")[1],
+					DisableExp:       opt.DisableExp,
 					Token:            opt.Token,
 					Passwords:        opt.Passwords,
 					Timeout:          opt.Timeout,
