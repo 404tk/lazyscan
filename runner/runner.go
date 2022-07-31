@@ -14,6 +14,7 @@ import (
 	"github.com/404tk/lazyscan/common/utils"
 	"github.com/404tk/lazyscan/pkg"
 	"github.com/404tk/lazyscan/pkg/schema"
+	"github.com/404tk/lazyscan/pkg/webscan"
 )
 
 type Options struct {
@@ -92,15 +93,21 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 		AlivePorts = schema.PortScan(Hosts, opt.Ports, opt.Timeout, opt.Threads)
 		log.Printf("open ports num is: %d\n", len(AlivePorts))
 		if len(AlivePorts) > 0 {
+			// GenerateCMD
 			cmds := common.Command{
 				UnixCommand: utils.GenerateCMD("unix", opt.Downloader),
 				TCPCommand:  utils.GenerateCMD("tcp", opt.Downloader),
 				WinCommand:  utils.GenerateCMD("win", opt.Downloader),
 			}
+			// RedisListen
 			if opt.RedisListen {
 				go opt.RunRedisRogueServer()
 				time.Sleep(1 * time.Second)
 			}
+			// LoadAllpocs
+			var once sync.Once
+			once.Do(webscan.InitDefaultPoc)
+			webscan.AllPocs = webscan.LoadAllpocs(opt.DefaultPocsName, opt.CustomPocs)
 			log.Println("start vulscan...")
 			for _, targetIP := range AlivePorts {
 				var info = common.HostInfo{
@@ -108,8 +115,6 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 					Port:             strings.Split(targetIP, ":")[1],
 					Token:            opt.Token,
 					Passwords:        opt.Passwords,
-					CustomPocs:       opt.CustomPocs,
-					DefaultPocsName:  opt.DefaultPocsName,
 					Timeout:          opt.Timeout,
 					Command:          cmds,
 					RedisRogueServer: opt.RedisRogueServer,

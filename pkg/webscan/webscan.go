@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/404tk/lazyscan/common"
 	"github.com/404tk/lazyscan/common/utils"
@@ -21,15 +20,13 @@ type PocInfo struct {
 
 //go:embed pocs
 var Pocs embed.FS
-var once sync.Once
 var DefaultPocs []*lib.Poc
+var AllPocs []*lib.Poc
 
 func WebScan(info *common.HostInfo) {
 	var num = 20 // 默认限制并发20
 	lib.Inithttp(num, info.Timeout)
-	once.Do(initDefaultPoc)
-	allPocs := loadAllpocs(info)
-	Execute(info, allPocs, num)
+	Execute(info, AllPocs, num)
 }
 
 func Execute(info *common.HostInfo, allPocs []*lib.Poc, num int) {
@@ -43,7 +40,7 @@ func Execute(info *common.HostInfo, allPocs []*lib.Poc, num int) {
 	lib.CheckMultiPoc(req, allPocs, num, info)
 }
 
-func initDefaultPoc() {
+func InitDefaultPoc() {
 	var defaultPocLen int
 	entries, err := Pocs.ReadDir("pocs")
 	if err != nil {
@@ -62,22 +59,23 @@ func initDefaultPoc() {
 	log.Printf("init defaultPoc Success : %d", defaultPocLen)
 }
 
-func loadAllpocs(info *common.HostInfo) []*lib.Poc {
+func LoadAllpocs(defaultPocsName, customPocs []string) []*lib.Poc {
 	var defaultPocLen, customPocLen int
 	var allPocs []*lib.Poc
-	if len(info.DefaultPocsName) == 1 && info.DefaultPocsName[0] == "all" {
+	if len(defaultPocsName) == 1 && defaultPocsName[0] == "all" {
 		allPocs = append(allPocs, DefaultPocs...)
+		defaultPocLen = len(allPocs)
 	} else {
 		for _, defaultPoc := range DefaultPocs {
-			if utils.IsContain(info.DefaultPocsName, defaultPoc.Name) {
+			if utils.IsContain(defaultPocsName, defaultPoc.Name) {
 				allPocs = append(allPocs, defaultPoc)
 				defaultPocLen++
 			}
 		}
 	}
 
-	if len(info.CustomPocs) > 0 {
-		for _, customPocStr := range info.CustomPocs {
+	if len(customPocs) > 0 {
+		for _, customPocStr := range customPocs {
 			customPoc, err := lib.LoadPocStr(customPocStr)
 			if err != nil {
 				continue

@@ -430,8 +430,7 @@ func RandomStr(randSource *rand.Rand, letterBytes string, n int) string {
 }
 
 func DoRequest(req *http.Request, redirect bool) (*Response, error) {
-	if req.Body == nil || req.Body == http.NoBody {
-	} else {
+	if req.Body != nil && req.Body != http.NoBody {
 		req.Header.Set("Content-Length", strconv.Itoa(int(req.ContentLength)))
 		if req.Header.Get("Content-Type") == "" {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

@@ -31,7 +31,7 @@ var Passwords = []string{"123456", "{user}", "{user}@123"}
 var PortList = map[string]string{
 	"ssh":           "22",
 	"smb":           "445",
-	"web":           "80,443,8080",
+	"web":           "80,443,8080,8090",
 	"mssql":         "1433",
 	"docker-remote": "2375",
 	"etcd":          "2379",

