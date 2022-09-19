@@ -15,6 +15,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9
 	golang.org/x/net v0.0.0-20220513224357-95641704303c
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+	golang.org/x/text v0.3.7
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -40,7 +41,6 @@ require (
 	github.com/tidwall/btree v1.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect

@@ -22,6 +22,7 @@ type Options struct {
 	HostFile         string
 	Ports            string
 	Token            string
+	Hash             string
 	NoPing           bool
 	Scantype         string
 	Poc              string
@@ -116,6 +117,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 					Port:             strings.Split(targetIP, ":")[1],
 					DisableExp:       opt.DisableExp,
 					Token:            opt.Token,
+					Hash:             opt.Hash,
 					Passwords:        opt.Passwords,
 					Timeout:          opt.Timeout,
 					Command:          cmds,

@@ -22,6 +22,7 @@ var Userdict = map[string][]string{
 	"mysql":      {"root"},
 	"ssh":        {"root"},
 	"smb":        {"Administrator"},
+	"wmi":        {"Administrator"},
 	"mssql":      {"sa"},
 	"postgresql": {"postgres"},
 }
@@ -30,6 +31,7 @@ var Passwords = []string{"123456", "{user}", "{user}@123"}
 
 var PortList = map[string]string{
 	"ssh":           "22",
+	"wmi":           "135",
 	"smb":           "445",
 	"web":           "80,443,8080,8090",
 	"mssql":         "1433",

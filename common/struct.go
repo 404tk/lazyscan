@@ -11,6 +11,7 @@ type HostInfo struct {
 	Usernames        []string
 	Passwords        []string
 	Token            string
+	Hash             string
 	Command          Command
 	RedisRogueServer string
 	Queue            *queue.Queue
@@ -41,5 +42,6 @@ type Vuln struct {
 	User    string
 	Pass    string
 	Token   string
+	Hash    string
 	PocName string
 }

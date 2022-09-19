@@ -14,6 +14,7 @@
 - Docker Daemon未授权
 - Kubelet未授权
 - SMB弱口令
+- WMI横向
 
 ## Web PoC插件  
 - PHP-CGI远程代码执行漏洞（CVE-2012-1823）  
