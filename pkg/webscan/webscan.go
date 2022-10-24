@@ -40,23 +40,25 @@ func Execute(info *common.HostInfo, allPocs []*lib.Poc, num int) {
 	lib.CheckMultiPoc(req, allPocs, num, info)
 }
 
-func InitDefaultPoc() {
+func InitDefaultPoc() []*lib.Poc {
+	var defaultPocs []*lib.Poc
 	var defaultPocLen int
 	entries, err := Pocs.ReadDir("pocs")
 	if err != nil {
 		log.Printf("[-] init defaultPoc error: %v\n", err)
-		return
+		return defaultPocs
 	}
 	for _, one := range entries {
 		path := one.Name()
 		if strings.HasSuffix(path, ".yaml") {
 			if poc, _ := lib.LoadPoc(path, Pocs); poc != nil {
-				DefaultPocs = append(DefaultPocs, poc)
+				defaultPocs = append(defaultPocs, poc)
 				defaultPocLen++
 			}
 		}
 	}
 	log.Printf("init defaultPoc Success : %d", defaultPocLen)
+	return defaultPocs
 }
 
 func LoadAllpocs(defaultPocsName, customPocs []string) []*lib.Poc {

@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -22,7 +23,7 @@ var ParseIPErr = errors.New(" host parsing error\n" +
 	"192.168.1.1-192.168.255.255\n" +
 	"192.168.1.1-255")
 
-func ParseIP(host, filename string) (hosts []string, err error) {
+func ParseIP(host, filename, noscan string) (hosts []string, err error) {
 	hosts = ParseIPs(host)
 	if filename != "" {
 		var filehost []string
@@ -31,7 +32,27 @@ func ParseIP(host, filename string) (hosts []string, err error) {
 	}
 	hosts = RemoveDuplicate(hosts)
 	if len(hosts) == 0 && host != "" {
-		err = ParseIPErr
+		return hosts, ParseIPErr
+	}
+	if noscan != "" {
+		nohosts := ParseIPs(noscan)
+		if len(nohosts) > 0 {
+			temp := map[string]struct{}{}
+			for _, host := range hosts {
+				temp[host] = struct{}{}
+			}
+
+			for _, host := range nohosts {
+				delete(temp, host)
+			}
+
+			var newDatas []string
+			for host := range temp {
+				newDatas = append(newDatas, host)
+			}
+			hosts = newDatas
+			sort.Strings(hosts)
+		}
 	}
 	return
 }

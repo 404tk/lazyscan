@@ -19,6 +19,7 @@ func parseOptions() *runner.Options {
 	flag.StringVar(&options.Token, "token", "", "K8s api-server token")
 	flag.StringVar(&options.Hash, "hash", "", "Windows NTLM HASH")
 	flag.BoolVar(&options.NoPing, "np", false, "not to ping")
+	flag.StringVar(&options.NoScan, "ns", "", "the hosts do not scan.Example: -ns 192.168.1.1/24")
 	flag.StringVar(&options.Scantype, "m", "", "Select scan type, as: -m etcd")
 	flag.StringVar(&options.Poc, "poc", "all", "Select poc, default: all")
 	flag.Int64Var(&options.Timeout, "time", 3, "Set timeout")

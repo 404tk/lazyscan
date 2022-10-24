@@ -13,6 +13,7 @@ import (
 func main() {
 	options := &runner.Options{
 		Host:     "172.16.61.2,172.16.61.3", // 扫描目标
+		NoScan:   "172.16.61.2",             // 排除目标
 		NoPing:   false,                     // 不探活直接扫
 		Scantype: "",                        // 默认扫描全部，可指定服务名称
 		Timeout:  3,
@@ -62,21 +63,7 @@ func main() {
 		},
 		Accounts:        []string{"admin/123456", "test/test", "/"},
 		DefaultPocsName: []string{"poc-yaml-confluence-cve-2022-26134"},
-		CustomPocs: []string{`name: poc-yaml-test
-		set:
-		  poc: md5("test")
-		  exp: ord(unixloader)
-		rules:
-		  - method: GET
-			path: /test?id={{poc}}
-			follow_redirects: false
-			expression: |
-			  response.status == 404
-		exploit:
-		  - method: POST
-			path: /exp?cmd={{exp}}
-			body: <?php echo {{exp}}; ?>
-			follow_redirects: false`},
+		CustomPocs:      []string{},
 	}
 	resultQueue := queue.NewQueue() // 扫描结果队列
 	r, err := runner.New(options)

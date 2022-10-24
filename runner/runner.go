@@ -24,6 +24,7 @@ type Options struct {
 	Token            string
 	Hash             string
 	NoPing           bool
+	NoScan           string
 	Scantype         string
 	Poc              string
 	Timeout          int64
@@ -78,7 +79,7 @@ func (opt *Options) Run(ctx context.Context, resultQueue *queue.Queue) (result O
 
 func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, resultQueue *queue.Queue, result *Output) {
 	log.Println("Start infoscan...")
-	Hosts, err := utils.ParseIP(opt.Host, opt.HostFile)
+	Hosts, err := utils.ParseIP(opt.Host, opt.HostFile, opt.NoScan)
 	if err != nil {
 		log.Printf("Parse IP ERROR: %s\n", err)
 		cancel()
@@ -107,8 +108,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 				time.Sleep(1 * time.Second)
 			}
 			// LoadAllpocs
-			var once sync.Once
-			once.Do(webscan.InitDefaultPoc)
+			webscan.DefaultPocs = webscan.InitDefaultPoc()
 			webscan.AllPocs = webscan.LoadAllpocs(opt.DefaultPocsName, opt.CustomPocs)
 			log.Println("start vulscan...")
 			for _, targetIP := range AlivePorts {
