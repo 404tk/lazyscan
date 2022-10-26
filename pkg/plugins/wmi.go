@@ -81,18 +81,24 @@ func WMIAuth(info *common.HostInfo, cfg wmiexec.WmiExecConfig) (bool, error) {
 		return false, err
 	}
 
-	if !info.DisableExp {
-		command := fmt.Sprintf("C:\\Windows\\system32\\cmd.exe /c \"%s\"", info.Command.WinCommand)
-		if execer.TargetRPCPort == 0 {
-			return true, errors.New("RPC Port is 0, cannot connect")
-		}
-
-		err = execer.RPCConnect(info.Timeout)
-		if err != nil {
-			return true, err
-		}
-		err = execer.Exec(command)
+	if info.DisableExp && info.Command == "" {
+		return true, err
 	}
+
+	var cmd string
+	if !info.DisableExp {
+		cmd = fmt.Sprintf("C:\\Windows\\system32\\cmd.exe /c \"%s\"", info.Commands.WinCommand)
+	} else {
+		cmd = fmt.Sprintf("C:\\Windows\\system32\\cmd.exe /c \"%s\"", info.Command)
+	}
+	if execer.TargetRPCPort == 0 {
+		return true, errors.New("RPC Port is 0, cannot connect")
+	}
+	err = execer.RPCConnect(info.Timeout)
+	if err != nil {
+		return true, err
+	}
+	err = execer.Exec(cmd)
 
 	return true, err
 }

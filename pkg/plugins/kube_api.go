@@ -45,11 +45,16 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 		info.Queue.Push(vuln)
 	}
 
-	if info.DisableExp {
+	if info.DisableExp && info.Command == "" {
 		return true, err
 	}
+	var cmd string
+	if !info.DisableExp {
+		cmd = info.Commands.TCPCommand
+	} else {
+		cmd = info.Command
+	}
 	// batch command execution
-	cmd := info.Command.TCPCommand
 	if cmd != "" {
 		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
 		urlecd := url.QueryEscape(b64)

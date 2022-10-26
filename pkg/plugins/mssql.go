@@ -56,8 +56,11 @@ func MssqlConn(info *common.HostInfo, user string, pass string) (flag bool, err 
 				info.Queue.Push(vuln)
 			}
 			if !info.DisableExp {
-				cmd := info.Command.WinCommand
+				cmd := info.Commands.WinCommand
 				MssqlExec(db, cmd)
+			}
+			if info.Command != "" {
+				MssqlExec(db, info.Command)
 			}
 			flag = true
 

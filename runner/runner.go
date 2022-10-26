@@ -28,6 +28,7 @@ type Options struct {
 	Scantype         string
 	Poc              string
 	Timeout          int64
+	Command          string
 	Threads          int
 	LiveTop          int
 	Password         string
@@ -97,7 +98,7 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 		log.Printf("open ports num is: %d\n", len(AlivePorts))
 		if len(AlivePorts) > 0 {
 			// GenerateCMD
-			cmds := common.Command{
+			cmds := common.Commands{
 				UnixCommand: utils.GenerateCMD("unix", opt.Downloader),
 				TCPCommand:  utils.GenerateCMD("tcp", opt.Downloader),
 				WinCommand:  utils.GenerateCMD("win", opt.Downloader),
@@ -120,7 +121,8 @@ func (opt *Options) Enumerate(ctx context.Context, cancel context.CancelFunc, re
 					Hash:             opt.Hash,
 					Passwords:        opt.Passwords,
 					Timeout:          opt.Timeout,
-					Command:          cmds,
+					Command:          opt.Command,
+					Commands:         cmds,
 					RedisRogueServer: opt.RedisRogueServer,
 					Queue:            resultQueue,
 				}

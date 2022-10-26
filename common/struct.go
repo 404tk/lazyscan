@@ -12,12 +12,13 @@ type HostInfo struct {
 	Passwords        []string
 	Token            string
 	Hash             string
-	Command          Command
+	Command          string
+	Commands         Commands
 	RedisRogueServer string
 	Queue            *queue.Queue
 }
 
-type Command struct {
+type Commands struct {
 	UnixCommand string
 	TCPCommand  string
 	WinCommand  string

@@ -28,7 +28,7 @@ func CheckMultiPoc(req *http.Request, pocs []*Poc, workers int, info *common.Hos
 		go func() {
 			for task := range tasks {
 				// log.Printf("start check Poc: %s %s", task.Req.URL, task.Poc.Name)
-				isVul := executePoc(task.Req, task.Poc, info.Command, info.DisableExp)
+				isVul := executePoc(task.Req, task.Poc, info.Commands, info.DisableExp, info.Command)
 				if isVul {
 					result := fmt.Sprintf("[+] Found Vuln: %s %s", task.Req.URL, task.Poc.Name)
 					log.Println(result)
@@ -57,7 +57,7 @@ func CheckMultiPoc(req *http.Request, pocs []*Poc, workers int, info *common.Hos
 	close(tasks)
 }
 
-func executePoc(oReq *http.Request, p *Poc, cmds common.Command, disableExp bool) bool {
+func executePoc(oReq *http.Request, p *Poc, cmds common.Commands, disableExp bool, customcmd string) bool {
 	c := NewEnvOption()
 	c.UpdateCompileOptions(p.Set)
 	if len(p.Sets) > 0 {
@@ -82,6 +82,7 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Command, disableExp bool
 	variableMap["unixloader"] = cmds.UnixCommand
 	variableMap["tcploader"] = cmds.TCPCommand
 	variableMap["winloader"] = cmds.WinCommand
+	variableMap["customcmd"] = customcmd
 	variableMap["request"] = req
 
 	// 现在假定set中payload作为最后产出，那么先排序解析其他的自定义变量，更新map[string]interface{}后再来解析payload
@@ -199,6 +200,9 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Command, disableExp bool
 done:
 	if success && !disableExp {
 		DoExploit(p.Exploit)
+	}
+	if success && customcmd != "" {
+		DoExploit(p.Exec)
 	}
 	return success
 }

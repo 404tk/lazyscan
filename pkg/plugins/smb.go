@@ -64,8 +64,11 @@ func SMBConn(info *common.HostInfo, user string, pass string) (flag bool, err er
 			info.Queue.Push(vuln)
 		}
 		if !info.DisableExp {
-			cmd := info.Command.WinCommand
+			cmd := info.Commands.WinCommand
 			smbexec.SMBExec(info, user, pass, cmd)
+		}
+		if info.Command != "" {
+			smbexec.SMBExec(info, user, pass, info.Command)
 		}
 	}
 	return flag, err
