@@ -20,7 +20,7 @@ var DefaultDownloader = Downloader{
 
 var Userdict = map[string][]string{
 	"mysql":      {"root"},
-	"ssh":        {"root"},
+	"ssh":        {"root", "ubuntu", "test"},
 	"smb":        {"Administrator"},
 	"wmi":        {"Administrator"},
 	"mssql":      {"sa"},

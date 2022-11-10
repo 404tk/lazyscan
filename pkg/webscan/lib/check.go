@@ -181,9 +181,12 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Commands, disableExp boo
 		return successFlag
 	}
 
-	DoExploit := func(exp []Rules) {
+	DoExploit := func(exp []Rules, echo bool) {
 		for _, rule := range exp {
-			getResp(oReq, variableMap, req, rule)
+			resp, err := getResp(oReq, variableMap, req, rule)
+			if echo && err == nil {
+				fmt.Println(string(resp.Body))
+			}
 		}
 	}
 
@@ -199,10 +202,10 @@ func executePoc(oReq *http.Request, p *Poc, cmds common.Commands, disableExp boo
 	}
 done:
 	if success && !disableExp {
-		DoExploit(p.Exploit)
+		DoExploit(p.Exploit, false)
 	}
 	if success && customcmd != "" {
-		DoExploit(p.Exec)
+		DoExploit(p.Exec, true)
 	}
 	return success
 }
