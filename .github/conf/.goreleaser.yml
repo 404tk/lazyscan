@@ -10,7 +10,6 @@ builds:
     goos:
       - linux
       - windows
-      - darwin
     goarch:
       - amd64
       - arm64
@@ -30,10 +29,23 @@ builds:
         goarch: arm64
       - goos: windows
         goarch: arm
-      - goos: darwin
-        goarch: 386
     hooks:
        post: upx --best -f -q "{{ .Path }}"
+  
+  - id: "without-upx"
+    main: ./cmd/main.go
+    binary: lazyscan
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser
 
 archives:
   - 
