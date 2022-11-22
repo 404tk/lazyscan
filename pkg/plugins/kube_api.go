@@ -2,7 +2,6 @@ package plugins
 
 import (
 	"crypto/tls"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -56,8 +55,6 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 	}
 	// batch command execution
 	if cmd != "" {
-		b64 := base64.StdEncoding.EncodeToString([]byte(cmd))
-		urlecd := url.QueryEscape(b64)
 		for _, p := range pods {
 			pn := p.Get("metadata.name").String()
 			ns := p.Get("metadata.namespace").String()
@@ -70,7 +67,7 @@ func KubeAPIServerScan(info *common.HostInfo) (bool, error) {
 				api := fmt.Sprintf(opts.Endpoint+
 					"/api/v1/namespaces/%s/pods/%s/exec"+
 					"?container=%s&command=/bin/sh&command=-c&command=%s&stderr=true&stdin=true&stdout=true",
-					ns, pn, c.Get("name").String(), urlecd)
+					ns, pn, c.Get("name").String(), url.QueryEscape(cmd))
 				_, err := kubeAPIExec(info, api)
 				if strings.Contains(err.Error(), "forbidden") &&
 					strings.Contains(err.Error(), "pods/exec") {
@@ -107,6 +104,10 @@ func kubeAPIExec(info *common.HostInfo, api string) (bool, error) {
 		return false, err
 	}
 	if resp.StatusCode == http.StatusSwitchingProtocols {
+		if info.Command != "" {
+			fmt.Println(api)
+			fmt.Println(string(raw))
+		}
 		return true, nil
 	}
 	return false, errors.New(string(raw))
